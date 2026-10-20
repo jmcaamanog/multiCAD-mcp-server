@@ -6,7 +6,7 @@ Handles entity property operations.
 
 import logging
 import math
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, Any, TYPE_CHECKING, Optional, List
 
 logger = logging.getLogger(__name__)
 
@@ -167,3 +167,113 @@ class EntityMixin:
         except Exception as e:
             logger.error(f"Failed to calculate area for entity {handle}: {e}")
             return {"handle": handle, "error": str(e), "area": 0.0, "perimeter": 0.0}
+
+    def find_text_entities(
+        self,
+        search_pattern: str,
+        layer: Optional[str] = None,
+        case_sensitive: bool = False,
+        use_regex: bool = False,
+        handles: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Find text entities in AutoCAD drawing."""
+        import re
+        flags = 0 if case_sensitive else re.IGNORECASE
+        pat = re.compile(search_pattern if use_regex else re.escape(search_pattern), flags)
+
+        results = []
+        try:
+            document = self._get_document("find_text_entities")
+            target_handles = set(handles) if handles else None
+
+            for obj in document.ModelSpace:
+                h = getattr(obj, "Handle", "")
+                if target_handles and h not in target_handles:
+                    continue
+                obj_layer = getattr(obj, "Layer", "")
+                if layer and obj_layer.lower() != layer.lower():
+                    continue
+
+                obj_name = getattr(obj, "ObjectName", "")
+                if obj_name in ("AcDbText", "AcDbMText"):
+                    txt = getattr(obj, "TextString", "")
+                    if pat.search(txt):
+                        results.append({"handle": h, "type": obj_name, "text": txt, "layer": obj_layer})
+                elif obj_name == "AcDbBlockReference" and getattr(obj, "HasAttributes", False):
+                    for att in obj.GetAttributes():
+                        txt = getattr(att, "TextString", "")
+                        if pat.search(txt):
+                            results.append({
+                                "handle": h,
+                                "attrib_tag": getattr(att, "TagString", ""),
+                                "type": "AcDbAttribute",
+                                "text": txt,
+                                "layer": getattr(att, "Layer", obj_layer),
+                            })
+        except Exception as e:
+            logger.error(f"Error finding text entities: {e}")
+        return results
+
+    def replace_text_entities(
+        self,
+        search_pattern: str,
+        replacement: str,
+        layer: Optional[str] = None,
+        case_sensitive: bool = False,
+        use_regex: bool = False,
+        handles: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Batch find and replace text across drawing entities in AutoCAD."""
+        import re
+        flags = 0 if case_sensitive else re.IGNORECASE
+        pat = re.compile(search_pattern if use_regex else re.escape(search_pattern), flags)
+
+        replacements = []
+        try:
+            document = self._get_document("replace_text_entities")
+            target_handles = set(handles) if handles else None
+
+            for obj in document.ModelSpace:
+                h = getattr(obj, "Handle", "")
+                if target_handles and h not in target_handles:
+                    continue
+                obj_layer = getattr(obj, "Layer", "")
+                if layer and obj_layer.lower() != layer.lower():
+                    continue
+
+                obj_name = getattr(obj, "ObjectName", "")
+                if obj_name in ("AcDbText", "AcDbMText"):
+                    old_txt = getattr(obj, "TextString", "")
+                    if pat.search(old_txt):
+                        new_txt = pat.sub(replacement, old_txt)
+                        if new_txt != old_txt:
+                            obj.TextString = new_txt
+                            obj.Update()
+                            replacements.append({
+                                "handle": h,
+                                "type": obj_name,
+                                "old_text": old_txt,
+                                "new_text": new_txt,
+                                "layer": obj_layer,
+                            })
+                elif obj_name == "AcDbBlockReference" and getattr(obj, "HasAttributes", False):
+                    for att in obj.GetAttributes():
+                        old_txt = getattr(att, "TextString", "")
+                        if pat.search(old_txt):
+                            new_txt = pat.sub(replacement, old_txt)
+                            if new_txt != old_txt:
+                                att.TextString = new_txt
+                                att.Update()
+                                replacements.append({
+                                    "handle": h,
+                                    "attrib_tag": getattr(att, "TagString", ""),
+                                    "type": "AcDbAttribute",
+                                    "old_text": old_txt,
+                                    "new_text": new_txt,
+                                    "layer": getattr(att, "Layer", obj_layer),
+                                })
+        except Exception as e:
+            logger.error(f"Error replacing text entities: {e}")
+            return {"success": False, "error": str(e), "count": len(replacements), "replacements": replacements}
+
+        return {"success": True, "count": len(replacements), "replacements": replacements}

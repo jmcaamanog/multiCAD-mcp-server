@@ -795,6 +795,64 @@ def _extend(spec: Dict[str, Any]) -> Dict[str, Any]:
     return {"success": success, "handle": handle, "boundary": boundary, "mode": "extend"}
 
 
+def _find_text(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Find text entities matching search pattern."""
+    adapter = get_current_adapter()
+    search = str(spec.get("find") or spec.get("search") or "").strip()
+    if not search:
+        return {"success": False, "error": "'find_text' requires 'find' parameter"}
+
+    layer = spec.get("layer")
+    case_sensitive = bool(spec.get("case_sensitive", False))
+    use_regex = bool(spec.get("regex", False))
+    handles_val = spec.get("handles")
+    target_handles = parse_handles(handles_val) if handles_val else None
+
+    if not hasattr(adapter, "find_text_entities"):
+        return {"success": False, "error": "Adapter does not support find_text_entities"}
+
+    matches = adapter.find_text_entities(
+        search_pattern=search,
+        layer=layer,
+        case_sensitive=case_sensitive,
+        use_regex=use_regex,
+        handles=target_handles,
+    )
+    return {
+        "success": True,
+        "count": len(matches),
+        "matches": matches,
+    }
+
+
+def _replace_text(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Batch find and replace text across drawing entities."""
+    adapter = get_current_adapter()
+    search = str(spec.get("find") or spec.get("search") or "").strip()
+    replace = str(spec.get("replace", ""))
+    if not search:
+        return {"success": False, "error": "'replace_text' requires 'find' parameter"}
+
+    layer = spec.get("layer")
+    case_sensitive = bool(spec.get("case_sensitive", False))
+    use_regex = bool(spec.get("regex", False))
+    handles_val = spec.get("handles")
+    target_handles = parse_handles(handles_val) if handles_val else None
+
+    if not hasattr(adapter, "replace_text_entities"):
+        return {"success": False, "error": "Adapter does not support replace_text_entities"}
+
+    res = adapter.replace_text_entities(
+        search_pattern=search,
+        replacement=replace,
+        layer=layer,
+        case_sensitive=case_sensitive,
+        use_regex=use_regex,
+        handles=target_handles,
+    )
+    return res
+
+
 # Dispatch table: action -> (handler, required_fields)
 ENTITY_DISPATCH: Dict[str, Tuple[Callable, List[str]]] = {
     "select": (_select, ["by", "value"]),
@@ -821,6 +879,8 @@ ENTITY_DISPATCH: Dict[str, Tuple[Callable, List[str]]] = {
     "join": (_join, []),
     "trim": (_trim, []),
     "extend": (_extend, []),
+    "find_text": (_find_text, []),
+    "replace_text": (_replace_text, []),
 }
 
 

@@ -358,6 +358,17 @@ ENTITY_OP_FIELDS: Dict[str, FieldList] = {
         ("handle", True, None),
         ("boundary", True, None),
     ],
+    "find_text": [
+        ("find", True, None),
+        ("layer", False, None),
+        ("case_sensitive", False, False),
+    ],
+    "replace_text": [
+        ("find", True, None),
+        ("replace", True, ""),
+        ("layer", False, None),
+        ("case_sensitive", False, False),
+    ],
 }
 
 

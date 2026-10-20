@@ -1460,6 +1460,56 @@ class CADInterface(ABC):
         """
         return {"success": False, "error": "Not implemented"}
 
+    # ========== Semantic Text Search & Replace ==========
+
+    def find_text_entities(
+        self,
+        search_pattern: str,
+        layer: Optional[str] = None,
+        case_sensitive: bool = False,
+        use_regex: bool = False,
+        handles: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Find text entities (TEXT, MTEXT, ATTRIB) matching search pattern.
+
+        Args:
+            search_pattern: Text substring or regex pattern
+            layer: Optional layer name filter
+            case_sensitive: Whether match is case sensitive
+            use_regex: Whether pattern is a regular expression
+            handles: Optional list of handles to restrict search
+
+        Returns:
+            List[Dict[str, Any]]: List of matching entities with text, handle, layer
+        """
+        return []
+
+    def replace_text_entities(
+        self,
+        search_pattern: str,
+        replacement: str,
+        layer: Optional[str] = None,
+        case_sensitive: bool = False,
+        use_regex: bool = False,
+        handles: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Batch find and replace text across drawing entities.
+
+        Args:
+            search_pattern: Text substring or regex to replace
+            replacement: New text replacement string
+            layer: Optional layer filter
+            case_sensitive: Case sensitive replacement
+            use_regex: Use regex substitution
+            handles: Optional list of handles to restrict replacement
+
+        Returns:
+            Dict[str, Any]: Replacement statistics and modified entities details
+        """
+        return {"success": False, "count": 0, "replacements": []}
+
     # ========== Utility Methods ==========
 
 

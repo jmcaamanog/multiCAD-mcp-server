@@ -2037,3 +2037,123 @@ class EzdxfAdapter(CADInterface):
             "sheet_number": sheet_number,
             "position": (round(x0, 2), round(y0, 2)),
         }
+
+    # ========== Semantic Text Search & Replace ==========
+
+    def find_text_entities(
+        self,
+        search_pattern: str,
+        layer: Optional[str] = None,
+        case_sensitive: bool = False,
+        use_regex: bool = False,
+        handles: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Find text entities in DXF document."""
+        import re
+        flags = 0 if case_sensitive else re.IGNORECASE
+        pat = re.compile(search_pattern if use_regex else re.escape(search_pattern), flags)
+
+        results = []
+        target_handles = set(handles) if handles else None
+
+        for e in self.msp:
+            h = str(e.dxf.handle)
+            if target_handles and h not in target_handles:
+                continue
+            e_layer = e.dxf.layer
+            if layer and e_layer.lower() != layer.lower():
+                continue
+
+            etype = e.dxftype()
+            if etype == "TEXT":
+                txt = e.dxf.text
+                if pat.search(txt):
+                    results.append({"handle": h, "type": "TEXT", "text": txt, "layer": e_layer})
+            elif etype == "MTEXT":
+                txt = e.text
+                if pat.search(txt):
+                    results.append({"handle": h, "type": "MTEXT", "text": txt, "layer": e_layer})
+            elif etype == "INSERT":
+                for att in getattr(e, "attribs", []):
+                    txt = att.dxf.text
+                    if pat.search(txt):
+                        results.append({
+                            "handle": h,
+                            "attrib_tag": att.dxf.tag,
+                            "type": "ATTRIB",
+                            "text": txt,
+                            "layer": att.dxf.layer,
+                        })
+
+        return results
+
+    def replace_text_entities(
+        self,
+        search_pattern: str,
+        replacement: str,
+        layer: Optional[str] = None,
+        case_sensitive: bool = False,
+        use_regex: bool = False,
+        handles: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Batch find and replace text across DXF drawing entities."""
+        import re
+        flags = 0 if case_sensitive else re.IGNORECASE
+        pat = re.compile(search_pattern if use_regex else re.escape(search_pattern), flags)
+
+        replacements = []
+        target_handles = set(handles) if handles else None
+
+        for e in self.msp:
+            h = str(e.dxf.handle)
+            if target_handles and h not in target_handles:
+                continue
+            e_layer = e.dxf.layer
+            if layer and e_layer.lower() != layer.lower():
+                continue
+
+            etype = e.dxftype()
+            if etype == "TEXT":
+                old_txt = e.dxf.text
+                if pat.search(old_txt):
+                    new_txt = pat.sub(replacement, old_txt)
+                    if new_txt != old_txt:
+                        e.dxf.text = new_txt
+                        replacements.append({
+                            "handle": h,
+                            "type": "TEXT",
+                            "old_text": old_txt,
+                            "new_text": new_txt,
+                            "layer": e_layer,
+                        })
+            elif etype == "MTEXT":
+                old_txt = e.text
+                if pat.search(old_txt):
+                    new_txt = pat.sub(replacement, old_txt)
+                    if new_txt != old_txt:
+                        e.text = new_txt
+                        replacements.append({
+                            "handle": h,
+                            "type": "MTEXT",
+                            "old_text": old_txt,
+                            "new_text": new_txt,
+                            "layer": e_layer,
+                        })
+            elif etype == "INSERT":
+                for att in getattr(e, "attribs", []):
+                    old_txt = att.dxf.text
+                    if pat.search(old_txt):
+                        new_txt = pat.sub(replacement, old_txt)
+                        if new_txt != old_txt:
+                            att.dxf.text = new_txt
+                            replacements.append({
+                                "handle": h,
+                                "attrib_tag": att.dxf.tag,
+                                "type": "ATTRIB",
+                                "old_text": old_txt,
+                                "new_text": new_txt,
+                                "layer": att.dxf.layer,
+                            })
+
+        return {"success": True, "count": len(replacements), "replacements": replacements}
+
