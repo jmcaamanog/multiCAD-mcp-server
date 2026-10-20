@@ -43,7 +43,29 @@ def _point_in_polygon(x: float, y: float, poly: List[Tuple[float, float]]) -> bo
     return inside
 
 
+def _line_segment_intersection(
+    p1: Tuple[float, float], p2: Tuple[float, float],
+    p3: Tuple[float, float], p4: Tuple[float, float],
+) -> Optional[Tuple[float, float]]:
+    """Calculate intersection point of segment (p1-p2) with segment (p3-p4) if any."""
+    dx1, dy1 = p2[0] - p1[0], p2[1] - p1[1]
+    dx2, dy2 = p4[0] - p3[0], p4[1] - p3[1]
+    denom = dx1 * dy2 - dy1 * dx2
+    if abs(denom) < 1e-9:
+        return None  # Parallel or collinear
+
+    t1 = ((p3[0] - p1[0]) * dy2 - (p3[1] - p1[1]) * dx2) / denom
+    t2 = ((p3[0] - p1[0]) * dy1 - (p3[1] - p1[1]) * dx1) / denom
+
+    if -1e-6 <= t1 <= 1.0 + 1e-6 and -1e-6 <= t2 <= 1.0 + 1e-6:
+        ix = p1[0] + t1 * dx1
+        iy = p1[1] + t1 * dy1
+        return (round(ix, 4), round(iy, 4))
+    return None
+
+
 def _get_drawing_entities_data(adapter) -> Dict[str, Any]:
+
     """Extract entities, closed spaces, and layers from active drawing."""
     entities = []
     spaces = []
@@ -189,17 +211,26 @@ def register_inspection_tools(mcp):
     def inspect_drawing(
         mode: str = "summary",
         point: Optional[str] = None,
+        handle1: Optional[str] = None,
+        handle2: Optional[str] = None,
+        snap_types: str = "endpoint,midpoint,center",
+        tolerance: float = 1.5,
+        layer: Optional[str] = None,
     ) -> str:
         """
-        Spatial Intelligence: inspect drawing dimensions, rooms, entities, and locations.
+        Spatial Intelligence & Snapping: inspect drawing dimensions, intersections, and snap points.
 
         Modes:
         - "summary" (default): Global bounding box, room schedule, layers count, and ASCII minimap.
         - "point": Raycasting query ("what is at coordinates X,Y?"). Requires `point="x,y"`.
+        - "intersections": Detect geometric crossing points between lines/entities. Optional: `handle1`, `handle2`, `layer`.
+        - "snap": Object snap assistant. Finds closest endpoint, midpoint, or center to `point`. Requires `point="x,y"`.
 
         Examples:
             inspect_drawing(mode="summary")
             inspect_drawing(mode="point", point="4.5, 3.2")
+            inspect_drawing(mode="intersections")
+            inspect_drawing(mode="snap", point="10.1, 0.05", snap_types="endpoint,midpoint")
         """
         adapter = get_current_adapter()
         data = _get_drawing_entities_data(adapter)
@@ -243,6 +274,92 @@ def register_inspection_tools(mcp):
                     "query_point": (x, y),
                     "description": f"Point ({x}, {y}) is in open drawing space (outside defined closed rooms).",
                 }, indent=2, ensure_ascii=False)
+
+        elif mode_lower in ("intersections", "intersection", "cruces"):
+            intersections = []
+            target_entities = data["entities"]
+            if layer:
+                target_entities = [e for e in target_entities if e["layer"].lower() == layer.lower()]
+
+            if handle1 and handle2:
+                e1 = next((e for e in target_entities if e["handle"] == handle1), None)
+                e2 = next((e for e in target_entities if e["handle"] == handle2), None)
+                if e1 and e2 and e1.get("points") and e2.get("points"):
+                    pts1, pts2 = e1["points"], e2["points"]
+                    for i in range(len(pts1) - 1):
+                        for j in range(len(pts2) - 1):
+                            ix = _line_segment_intersection(pts1[i], pts1[i+1], pts2[j], pts2[j+1])
+                            if ix:
+                                intersections.append({"point": ix, "entity1": handle1, "entity2": handle2})
+            else:
+                line_entities = [e for e in target_entities if e.get("points") and len(e["points"]) >= 2]
+                n_ent = len(line_entities)
+                for i in range(n_ent):
+                    for j in range(i + 1, n_ent):
+                        e1, e2 = line_entities[i], line_entities[j]
+                        pts1, pts2 = e1["points"], e2["points"]
+                        for si in range(len(pts1) - 1):
+                            for sj in range(len(pts2) - 1):
+                                ix = _line_segment_intersection(pts1[si], pts1[si+1], pts2[sj], pts2[sj+1])
+                                if ix:
+                                    intersections.append({"point": ix, "entity1": e1["handle"], "entity2": e2["handle"]})
+
+            return json.dumps({
+                "success": True,
+                "count": len(intersections),
+                "intersections": intersections,
+            }, indent=2, ensure_ascii=False)
+
+        elif mode_lower in ("snap", "osnap", "probe"):
+            if not point:
+                return json.dumps({"success": False, "error": "Snap mode requires 'point' parameter (e.g. '5.0, 3.2')"})
+            pt = parse_coordinate(point)
+            px, py = pt[0], pt[1]
+
+            allowed_types = set(s.strip().lower() for s in snap_types.split(","))
+            candidates = []
+
+            for e in data["entities"]:
+                h = e["handle"]
+                if e.get("points"):
+                    pts = e["points"]
+                    if "endpoint" in allowed_types:
+                        for p in pts:
+                            d = math.hypot(p[0] - px, p[1] - py)
+                            if d <= tolerance:
+                                candidates.append({"snap_type": "endpoint", "point": p, "distance": round(d, 4), "handle": h})
+                    if "midpoint" in allowed_types:
+                        for i in range(len(pts) - 1):
+                            mx = (pts[i][0] + pts[i+1][0]) / 2.0
+                            my = (pts[i][1] + pts[i+1][1]) / 2.0
+                            d = math.hypot(mx - px, my - py)
+                            if d <= tolerance:
+                                candidates.append({"snap_type": "midpoint", "point": (round(mx, 4), round(my, 4)), "distance": round(d, 4), "handle": h})
+                if "center" in allowed_types and e.get("center"):
+                    c = e["center"]
+                    d = math.hypot(c[0] - px, c[1] - py)
+                    if d <= tolerance:
+                        candidates.append({"snap_type": "center", "point": c, "distance": round(d, 4), "handle": h})
+
+            if candidates:
+                candidates.sort(key=lambda c: c["distance"])
+                best = candidates[0]
+                return json.dumps({
+                    "success": True,
+                    "snapped": True,
+                    "best_snap": best,
+                    "candidates_found": len(candidates),
+                    "all_candidates": candidates[:5],
+                }, indent=2, ensure_ascii=False)
+            else:
+                return json.dumps({
+                    "success": True,
+                    "snapped": False,
+                    "query_point": (px, py),
+                    "tolerance": tolerance,
+                    "message": f"No snap points found within tolerance {tolerance}",
+                }, indent=2, ensure_ascii=False)
+
 
         # Summary mode
         total_usable_area = sum(s["area"] for s in data["spaces"])
