@@ -14,13 +14,15 @@ __pycache__/
 htmlcov/
 coverage_report.txt
 
-# Test artifacts
-test_*.py
-test_*.png
-test_*.txt
-verify_*.py
-debug_*.py
+# Test artifacts (in root directory)
+/test_*.py
+/test_*.png
+/test_*.txt
+/verify_*.py
+/debug_*.py
 dxf_dump.txt
+!tests/**
+tests/**/__pycache__/
 
 # Logging
 logs/multicad_mcp.log
@@ -45,3 +47,6 @@ site/
 
 z_examples
 z_experiments
+
+# Internal notes & working memory
+NOTAS/

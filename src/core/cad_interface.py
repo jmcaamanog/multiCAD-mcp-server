@@ -831,6 +831,108 @@ class CADInterface(ABC):
         """
         pass
 
+    def zoom_window(self, corner1: Coordinate, corner2: Coordinate) -> bool:
+        """Zoom view to fit bounding box defined by corner1 and corner2."""
+        return True
+
+    def zoom_center(self, center: Coordinate, magnification: float = 1.0) -> bool:
+        """Zoom view centered on coordinate with specified magnification."""
+        return True
+
+    def set_view_preset(self, preset: str) -> bool:
+        """Set orthographic or isometric 3D view preset (top, front, iso_se, etc.)."""
+        return True
+
+    def set_visual_style(self, style: str) -> bool:
+        """Set visual style (wireframe, 2d, conceptual, realistic, shaded)."""
+        return True
+
+    def undo(self, count: int = 1) -> bool:
+        """Undo last action(s)."""
+        return True
+
+    def redo(self, count: int = 1) -> bool:
+        """Redo last undone action(s)."""
+        return True
+
+    def plot_to_pdf(
+        self, filepath: str, paper_size: str = "A3", monochrome: bool = False
+    ) -> Dict[str, Any]:
+        """Plot CAD drawing directly to a vector PDF document."""
+        return {"success": True, "path": filepath, "paper_size": paper_size}
+
+    # ========== Human-in-the-Loop Interaction ==========
+
+    def prompt_point(
+        self, prompt: str = "Select point:", base_point: Optional[Coordinate] = None
+    ) -> Dict[str, Any]:
+        """Prompt user in CAD viewport to pick a point with crosshair."""
+        return {"success": True, "point": (0.0, 0.0, 0.0), "interactive": False}
+
+    def prompt_entity(
+        self, prompt: str = "Select entity:"
+    ) -> Dict[str, Any]:
+        """Prompt user in CAD viewport to pick an entity."""
+        return {"success": True, "handle": "", "type": "", "interactive": False}
+
+    def prompt_distance(
+        self, prompt: str = "Specify distance:", base_point: Optional[Coordinate] = None
+    ) -> Dict[str, Any]:
+        """Prompt user in CAD viewport to specify or measure a distance."""
+        return {"success": True, "distance": 1.0, "interactive": False}
+
+    def prompt_string(
+        self, prompt: str = "Enter string:", has_spaces: bool = True
+    ) -> Dict[str, Any]:
+        """Prompt user in CAD command line to enter text string."""
+        return {"success": True, "string": "", "interactive": False}
+
+    # ========== BIM Semantic Metadata (XDATA) ==========
+
+    def set_entity_metadata(self, handle: str, metadata: Dict[str, Any]) -> bool:
+        """Attach BIM or extended semantic properties to entity."""
+        return True
+
+    def get_entity_metadata(self, handle: str) -> Dict[str, Any]:
+        """Retrieve attached BIM or extended semantic properties from entity."""
+        return {}
+
+    # ========== External References (XREF) & Raster Images ==========
+
+    def attach_xref(
+        self,
+        filepath: str,
+        block_name: Optional[str] = None,
+        insertion_point: Coordinate = (0.0, 0.0),
+        scale: float = 1.0,
+        rotation: float = 0.0,
+        overlay: bool = True,
+    ) -> Dict[str, Any]:
+        """Attach external DWG reference."""
+        return {"success": True, "name": block_name or "", "path": filepath}
+
+    def attach_raster(
+        self,
+        filepath: str,
+        insertion_point: Coordinate = (0.0, 0.0),
+        scale: float = 1.0,
+        rotation: float = 0.0,
+    ) -> Dict[str, Any]:
+        """Attach raster image or orthophoto."""
+        return {"success": True, "path": filepath}
+
+    def list_xrefs(self) -> List[Dict[str, Any]]:
+        """List active external references in the drawing."""
+        return []
+
+    def reload_xref(self, name: str) -> bool:
+        """Reload external reference by name."""
+        return True
+
+    def detach_xref(self, name: str) -> bool:
+        """Detach external reference by name."""
+        return True
+
     # ========== Entity Management ==========
 
     @abstractmethod

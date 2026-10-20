@@ -5,6 +5,41 @@ All notable changes to multiCAD-mcp will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **CLI Binary Entrypoint**: Added `[project.scripts]` in `pyproject.toml` exposing `multicad-mcp` command (`multicad-mcp = "server:main"`), enabling direct CLI execution and `uvx multiCAD-mcp` support.
+- **CLI Flags**: Added `main()` entrypoint function in `src/server.py` supporting `--transport {stdio,http}`, `--host`, `--port`, and `--no-dashboard` arguments.
+- **1-Click Windows Installer**: Added `instalar_en_claude_desktop.bat` and `scripts/instalar_claude_desktop.py` for automated, non-destructive configuration of Claude Desktop and Cursor with automatic `.bak` backups.
+- **Resilient Shorthand Input Parsing**: Enhanced `parse_drawing_input`, `parse_entity_ops_input`, `parse_layer_ops_input`, `parse_block_ops_input`, and `parse_file_ops_input` in `src/mcp_tools/shorthand.py` to natively accept Python `list` and `dict` objects in addition to shorthand strings.
+- **Architectural Macros (`wall`, `door`, `window`)**: Added high-level architectural shorthand commands in `draw_entities` (`wall|start|end|thickness|layer|color`, `door|start|end|swing_direction|thickness|layer|color`, `window|start|end|thickness|layer|color`) allowing LLMs to draft floorplans with standard wall double lines, door openings with arcs, and window frames with single commands.
+- **FIEBDC-3 (`.bc3`) Budget & Cost Export**: Added standard Spanish ConTech exchange format support in `export_data(format="bc3", filename=...)`, parsing CAD boundaries into classified measurement lines compatible with Presto, Arquímedes, and Menfis.
+- **Headless Vector Visual Preview (SVG)**: Added `export_view` / `get_screenshot` in `EzdxfAdapter` returning clean SVG vector renders with model bounding box auto-detection, providing instant visual feedback loops for multimodal LLMs.
+- **CAD Quality Assurance & Layer Purge**: Added `audit` action in `manage_entities` detecting zero-length lines, duplicate overlaps, and layer 0 infractions; added `purge` action in `manage_layers` automatically removing unused layers.
+- **GitHub CI/CD Automation Workflows**: Added multi-OS automated testing (`.github/workflows/ci.yml`), automated GitHub releases (`.github/workflows/release.yml`), issue templates, and Smithery registry manifest (`smithery.yaml`).
+- **Live Camera Control & View Management (`manage_view` / `manage_session`)**: Added `zoom_window`, `zoom_center`, `preset` (3D isometric / orthographic view presets: `top`, `bottom`, `front`, `iso_sw`, `iso_se`, etc.), `style` (visual styles: `wireframe`, `conceptual`, `realistic`, `shaded`), and full shorthand support (`ze`, `zw`, `zc`, `preset|top`, `style|realistic`).
+- **Human-in-the-Loop Interactive Prompts (`prompt_user`)**: Added interactive prompting with CAD crosshairs (`point` via `Utility.GetPoint`), entity picking on screen (`entity` via `Utility.GetEntity`), distance measuring (`distance` via `Utility.GetDistance`), and text input with graceful user cancellation handling.
+- **Standalone Vector PDF Plotting (`export_data(format="pdf")`)**: Added direct vector PDF 1.4 document plotting supporting standard paper sizes (`A4`, `A3`, `A2`, `A1`, `A0`), frame stamps, and line styles without requiring external heavy C libraries.
+- **BIM Semantic Metadata & XDATA (`set_metadata`, `get_metadata`)**: Added ability to attach and query structured BIM properties (fire rating, thermal U-values, cost codes, manufacturers) to any CAD entity handle using native AutoCAD XDATA and DXF extended dictionaries.
+- **External References & Raster Images (`manage_xrefs`)**: Added unified management for DWG external references (`attach_dwg`, `reload`, `detach`) and raster images/orthophotos (`attach_raster`).
+- **ConTech Bridge to `CE3X-MCP-SERVER` (`export_ce3x_envelope`)**: Added automatic building thermal envelope extraction with normal-vector orientation calculation (N, S, E, W, etc.), window-to-wall mapping, and CTE DB-HE structured JSON payload generation ready for direct energy certification in CE3X.
+- **Standardized Layer Templates (AECO, AIA, MEP)**: Added `template` action to `manage_layers` (`template|aeco`, `template|aia`, `template|mep`) to automatically provision professional CAD layer structures (colors, lineweights, architectural standards like CTE DB-HE/COAM, US AIA, and MEP systems) in a single command.
+- **Headless DXF Engine (`ezdxf`)**: Added `EzdxfAdapter` implementing full `CADInterface` for autonomous creation, editing, and saving of DXF drawings on disk without requiring AutoCAD/ZWCAD or Windows COM. Includes automatic server fallback when no GUI CAD is running.
+- **Area & Perimeter Computation (AECO)**: Added `area` action in `manage_entities` (`area|handles` or `area|layer|name`) supporting geometric polygon Shoelace calculation and native CAD properties for accurate architectural quantification.
+- **Spatial Intelligence & Point-in-Polygon Inspection (`inspect_drawing`)**: Added spatial intelligence tool supporting global bounding box calculation, room schedules, ASCII minimaps directly in chat, and raycasting Point-in-Polygon queries ("what is at coordinates X,Y?").
+- **Interactive Standalone HTML5 CAD Viewer (`show_drawing_viewer`)**: Added 1-click generation and browser launch of interactive vector CAD viewer with smooth pan/zoom, layer toggling, and room clicking inspector displaying calculated m² and BIM properties.
+- **Smart Architectural Annotations & Dimensioning (`manage_annotations`)**: Added automated space labeling (`label_spaces`) placing centered text in room centroids with calculated m² and BIM tags, and automated dimensioning (`auto_dimension`) supporting overall building bounding boxes and polyline segment wall dimensions.
+- **Automated Area Schedule Tables (`area_table`)**: Added `area_table` action in `manage_entities` (`area_table|x,y|layer|title`) to automatically measure closed boundaries and generate professional CAD summary tables of Usable Surface (Superficie Útil) with itemized breakdown and total summary rows.
+
+### Fixed
+
+- **FastMCP Import & `mcp 2.x` Compatibility**: Fixed `ModuleNotFoundError` in `src/mcp_tools/decorators.py` by importing `FastMCP` directly from `fastmcp` package instead of deprecated/removed `mcp.server.fastmcp`.
+- **Security Test Isolation**: Fixed false negative in `tests/unit/test_security.py::TestPathTraversal::test_validate_export_path_blocks_traversal_attempts` by properly mocking `ConfigManager.output.allow_arbitrary_paths = False`.
+- **Dictionary Key Duplication**: Removed duplicate `"Spline"` key in `src/web/api.py` entity type mapping.
+
+---
+
 ## [0.2.1] - 2026-06-27
 
 ### Added

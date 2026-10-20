@@ -1143,5 +1143,32 @@ class TestBlockCreation:
         assert result is not None
 
 
+class TestLayerTemplates:
+    """Test suite for layer templates (AECO, AIA, MEP)."""
+
+    def test_apply_template_aeco(self):
+        """Test applying AECO layer template."""
+        from src.mcp_tools.tools.layers import _apply_template
+
+        with patch("src.mcp_tools.tools.layers.get_current_adapter") as mock_ga:
+            mock_adapter = MagicMock()
+            mock_adapter.create_layer.return_value = True
+            mock_ga.return_value = mock_adapter
+
+            res = _apply_template({"name": "aeco"})
+            assert res["success"] is True
+            assert res["created"] == 10
+            assert mock_adapter.create_layer.call_count == 10
+
+    def test_apply_template_unknown(self):
+        """Test applying unknown layer template returns graceful error."""
+        from src.mcp_tools.tools.layers import _apply_template
+
+        res = _apply_template({"name": "non_existent_template_xyz"})
+        assert res["success"] is False
+        assert "Unknown template" in res["error"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
