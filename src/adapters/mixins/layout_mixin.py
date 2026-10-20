@@ -6,8 +6,12 @@ Handles paperspace layouts, viewports (MVIEW), and title blocks.
 
 import logging
 from typing import TYPE_CHECKING, Dict, Any, List, Tuple, Optional
-import win32com.client
-import pythoncom
+try:
+    import win32com.client
+    import pythoncom
+except ImportError:
+    win32com = None  # type: ignore[assignment]
+    pythoncom = None  # type: ignore[assignment]
 
 from core import CADOperationError
 

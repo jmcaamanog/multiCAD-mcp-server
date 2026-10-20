@@ -9,8 +9,12 @@ import base64
 import os
 import time
 import re
-import win32gui
-import win32con
+try:
+    import win32gui
+    import win32con
+except ImportError:
+    win32gui = None  # type: ignore[assignment]
+    win32con = None  # type: ignore[assignment]
 from typing import TYPE_CHECKING, Dict
 from PIL import ImageGrab
 
