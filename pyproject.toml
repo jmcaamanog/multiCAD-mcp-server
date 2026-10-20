@@ -3,29 +3,43 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "multiCAD-mcp"
-version = "0.2.0"
-description = "MCP server for natural language control of multiple CAD applications (AutoCAD, ZWCAD, GstarCAD, BricsCAD) via Windows COM"
+name = "multicad-mcp-server"
+version = "0.2.1"
+description = "Universal Industrial-Grade MCP Server for AI CAD Control, Headless DXF Engine, AECO Standards, and CE3X ConTech Bridge"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [
+    {name = "Jose Manuel Caamaño González", email = "5682292+jmcaamanog@users.noreply.github.com"},
     {name = "AnCode666"},
     {name = "SVF-GFA"},
     {name = "JardiMargalefAgusti"}
 ]
-keywords = ["CAD", "AutoCAD", "ZWCAD", "MCP", "Windows", "COM"]
+keywords = [
+    "cad",
+    "autocad",
+    "zwcad",
+    "mcp",
+    "model-context-protocol",
+    "aeco",
+    "bim",
+    "contech",
+    "ezdxf",
+    "ce3x",
+    "fastmcp",
+    "building-design"
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Scientific/Engineering",
     "Natural Language :: English",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 
 dependencies = [
@@ -57,13 +71,22 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ancode666/multiCAD-mcp"
-Documentation = "https://github.com/ancode666/multiCAD-mcp/blob/main/README.md"
-Repository = "https://github.com/ancode666/multiCAD-mcp.git"
-"Bug Tracker" = "https://github.com/ancode666/multiCAD-mcp/issues"
+Homepage = "https://github.com/jmcaamanog/multiCAD-mcp-server"
+Documentation = "https://github.com/jmcaamanog/multiCAD-mcp-server/blob/main/README.md"
+Repository = "https://github.com/jmcaamanog/multiCAD-mcp-server.git"
+"Bug Tracker" = "https://github.com/jmcaamanog/multiCAD-mcp-server/issues"
+"Changelog" = "https://github.com/jmcaamanog/multiCAD-mcp-server/blob/main/CHANGELOG.md"
 
 [project.scripts]
 multicad-mcp = "server:main"
+multicad-mcp-server = "server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["config.json", "*.json"]
+"web" = ["static/*", "static/**/*"]
 
 
 

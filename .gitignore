@@ -47,6 +47,13 @@ site/
 
 z_examples
 z_experiments
+# Distribution & packaging
+dist/
+build/
+*.egg-info/
+
+# Local maintenance scripts
+subir_a_pypi.bat
 
 # Internal notes & working memory
 NOTAS/
