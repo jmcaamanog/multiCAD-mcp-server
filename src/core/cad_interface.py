@@ -1302,7 +1302,54 @@ class CADInterface(ABC):
         """
         return True
 
+    def create_boundary(
+        self, internal_point: Coordinate, layer: str = "0"
+    ) -> Optional[str]:
+        """
+        Detect surrounding closed boundary around internal point and create polyline.
+
+        Args:
+            internal_point: Probe point (x, y) inside room
+            layer: Destination layer for boundary polyline
+
+        Returns:
+            Optional[str]: Handle of created boundary polyline
+        """
+        return None
+
+    def join_entities(
+        self, handles: List[str], tolerance: float = 0.01
+    ) -> Optional[str]:
+        """
+        Join loose connected lines and arcs into a continuous polyline.
+
+        Args:
+            handles: List of entity handles to join
+            tolerance: Maximum gap distance to bridge (default: 0.01)
+
+        Returns:
+            Optional[str]: Handle of joined polyline
+        """
+        return None
+
+    def trim_extend_entity(
+        self, handle: str, boundary_handle: str, mode: str = "trim"
+    ) -> bool:
+        """
+        Trim or extend a line against a boundary cutting edge.
+
+        Args:
+            handle: Line to trim/extend
+            boundary_handle: Boundary/cutting line
+            mode: "trim" or "extend"
+
+        Returns:
+            bool: True if successful
+        """
+        return False
+
     # ========== Utility Methods ==========
+
 
 
     @staticmethod

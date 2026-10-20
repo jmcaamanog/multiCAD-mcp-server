@@ -718,6 +718,83 @@ def _matchprop(spec: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _boundary(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a boundary polyline around an internal coordinate."""
+    adapter = get_current_adapter()
+    point_raw = spec.get("point") or spec.get("internal_point") or spec.get("coords") or "0,0"
+    from mcp_tools.helpers import parse_coordinate
+    pt = parse_coordinate(point_raw)
+    layer = spec.get("layer", "A-BOUND")
+
+    if not hasattr(adapter, "create_boundary"):
+        return {"success": False, "error": "Adapter does not support boundary creation"}
+
+    handle = adapter.create_boundary(pt, layer=layer)
+    return {
+        "success": bool(handle),
+        "handle": handle,
+        "probe_point": pt,
+        "layer": layer,
+    }
+
+
+def _join(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Join loose connected lines/arcs into a continuous polyline."""
+    adapter = get_current_adapter()
+    handles_raw = spec.get("handles") or spec.get("handle", "")
+    if isinstance(handles_raw, list):
+        handle_list = [str(h).strip() for h in handles_raw]
+    else:
+        handle_list = [h.strip() for h in str(handles_raw).split(",") if h.strip()]
+
+    if len(handle_list) < 2:
+        return {"success": False, "error": "'join' requires at least two entity handles (e.g. 'A1,B2')"}
+
+    tolerance = float(spec.get("tolerance", 0.05))
+    if not hasattr(adapter, "join_entities"):
+        return {"success": False, "error": "Adapter does not support join operation"}
+
+    res = adapter.join_entities(handle_list, tolerance=tolerance)
+    return {
+        "success": bool(res),
+        "handle": res,
+        "joined_count": len(handle_list),
+        "tolerance": tolerance,
+    }
+
+
+def _trim(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Trim a line against a boundary cutting edge."""
+    adapter = get_current_adapter()
+    handle = str(spec.get("handle") or spec.get("target", "")).strip()
+    boundary = str(spec.get("boundary") or spec.get("cutting_edge") or spec.get("boundary_handle", "")).strip()
+
+    if not handle or not boundary:
+        return {"success": False, "error": "'trim' requires 'handle' and 'boundary'"}
+
+    if not hasattr(adapter, "trim_extend_entity"):
+        return {"success": False, "error": "Adapter does not support trim operation"}
+
+    success = adapter.trim_extend_entity(handle, boundary, mode="trim")
+    return {"success": success, "handle": handle, "boundary": boundary, "mode": "trim"}
+
+
+def _extend(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Extend a line to touch a boundary edge."""
+    adapter = get_current_adapter()
+    handle = str(spec.get("handle") or spec.get("target", "")).strip()
+    boundary = str(spec.get("boundary") or spec.get("boundary_handle", "")).strip()
+
+    if not handle or not boundary:
+        return {"success": False, "error": "'extend' requires 'handle' and 'boundary'"}
+
+    if not hasattr(adapter, "trim_extend_entity"):
+        return {"success": False, "error": "Adapter does not support extend operation"}
+
+    success = adapter.trim_extend_entity(handle, boundary, mode="extend")
+    return {"success": success, "handle": handle, "boundary": boundary, "mode": "extend"}
+
+
 # Dispatch table: action -> (handler, required_fields)
 ENTITY_DISPATCH: Dict[str, Tuple[Callable, List[str]]] = {
     "select": (_select, ["by", "value"]),
@@ -740,7 +817,12 @@ ENTITY_DISPATCH: Dict[str, Tuple[Callable, List[str]]] = {
     "chamfer": (_chamfer, []),
     "explode": (_explode, []),
     "matchprop": (_matchprop, []),
+    "boundary": (_boundary, []),
+    "join": (_join, []),
+    "trim": (_trim, []),
+    "extend": (_extend, []),
 }
+
 
 
 

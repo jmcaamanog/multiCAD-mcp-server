@@ -331,7 +331,24 @@ ENTITY_OP_FIELDS: Dict[str, FieldList] = {
         ("source_handle", True, None),
         ("target_handles", True, None),
     ],
+    "boundary": [
+        ("point", True, None),
+        ("layer", False, "A-BOUND"),
+    ],
+    "join": [
+        ("handles", True, None),
+        ("tolerance", False, 0.05),
+    ],
+    "trim": [
+        ("handle", True, None),
+        ("boundary", True, None),
+    ],
+    "extend": [
+        ("handle", True, None),
+        ("boundary", True, None),
+    ],
 }
+
 
 
 

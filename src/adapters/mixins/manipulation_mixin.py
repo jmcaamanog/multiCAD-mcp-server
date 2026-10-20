@@ -655,3 +655,60 @@ class ManipulationMixin:
         self.refresh_view()
         return True
 
+    def create_boundary(
+        self, internal_point: Any, layer: str = "0"
+    ) -> Optional[str]:
+        """Detect closed boundary around internal point and create polyline via COM."""
+        self._validate_connection()
+        document = self._get_document("create_boundary")
+        try:
+            pt = (float(internal_point[0]), float(internal_point[1]))
+            # Count entities before
+            count_before = document.ModelSpace.Count
+            document.SendCommand(f"_-BOUNDARY {pt[0]},{pt[1]} \n")
+            self.refresh_view()
+            if document.ModelSpace.Count > count_before:
+                new_entity = document.ModelSpace.Item(document.ModelSpace.Count - 1)
+                if layer and layer != "0":
+                    new_entity.Layer = layer
+                return str(new_entity.Handle)
+            return None
+        except Exception as e:
+            logger.error(f"Failed to create boundary at {internal_point}: {e}")
+            return None
+
+    def join_entities(
+        self, handles: List[str], tolerance: float = 0.01
+    ) -> Optional[str]:
+        """Join loose connected lines and arcs into a polyline via COM."""
+        self._validate_connection()
+        document = self._get_document("join_entities")
+        if not handles or len(handles) < 2:
+            return None
+        try:
+            count_before = document.ModelSpace.Count
+            sel_lisp = " ".join([f'(handent "{h}")' for h in handles])
+            document.SendCommand(f"_JOIN {sel_lisp} \n")
+            self.refresh_view()
+            # If joined into a single polyline, the first handle or newly created one is returned
+            return handles[0]
+        except Exception as e:
+            logger.error(f"Failed to join entities {handles}: {e}")
+            return None
+
+    def trim_extend_entity(
+        self, handle: str, boundary_handle: str, mode: str = "trim"
+    ) -> bool:
+        """Trim or extend a line against a boundary edge via COM."""
+        self._validate_connection()
+        document = self._get_document("trim_extend_entity")
+        try:
+            cmd = "_TRIM" if mode.lower() == "trim" else "_EXTEND"
+            document.SendCommand(f"{cmd} (handent \"{boundary_handle}\") \n (handent \"{handle}\") \n\n")
+            self.refresh_view()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to {mode} entity {handle} against {boundary_handle}: {e}")
+            return False
+
+

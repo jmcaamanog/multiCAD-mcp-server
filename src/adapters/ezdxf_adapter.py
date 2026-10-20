@@ -1676,3 +1676,184 @@ class EzdxfAdapter(CADInterface):
 
         return True
 
+    def create_boundary(
+        self, internal_point: Coordinate, layer: str = "0"
+    ) -> Optional[str]:
+        """Detect closed boundary around internal point and create polyline."""
+        px, py = float(internal_point[0]), float(internal_point[1])
+
+        # 1. Check if an existing closed polyline encloses (px, py)
+        for entity in self.msp:
+            if entity.dxftype() in ("LWPOLYLINE", "POLYLINE"):
+                if getattr(entity, "is_closed", False):
+                    if entity.dxftype() == "LWPOLYLINE":
+                        pts = [(float(p[0]), float(p[1])) for p in entity.get_points()]
+                    else:
+                        pts = [(float(v.dxf.location[0]), float(v.dxf.location[1])) for v in entity.vertices]
+                    # Point in polygon
+                    n = len(pts)
+                    inside = False
+                    for i in range(n):
+                        p1x, p1y = pts[i]
+                        p2x, p2y = pts[(i + 1) % n]
+                        if ((p1y > py) != (p2y > py)) and (px < (p2x - p1x) * (py - p1y) / (p2y - p1y + 1e-12) + p1x):
+                            inside = not inside
+                    if inside:
+                        return str(entity.dxf.handle)
+
+        # 2. Ray-cast in 4 cardinal directions to find nearest bounding lines
+        lines = [e for e in self.msp if e.dxftype() == "LINE"]
+        min_x, max_x = None, None
+        min_y, max_y = None, None
+
+        for l in lines:
+            x1, y1 = float(l.dxf.start[0]), float(l.dxf.start[1])
+            x2, y2 = float(l.dxf.end[0]), float(l.dxf.end[1])
+
+            # Vertical walls
+            if abs(x1 - x2) < 1e-3:
+                wx = x1
+                ymin, ymax = min(y1, y2), max(y1, y2)
+                if ymin <= py <= ymax:
+                    if wx < px and (min_x is None or wx > min_x):
+                        min_x = wx
+                    elif wx > px and (max_x is None or wx < max_x):
+                        max_x = wx
+            # Horizontal walls
+            elif abs(y1 - y2) < 1e-3:
+                wy = y1
+                xmin, xmax = min(x1, x2), max(x1, x2)
+                if xmin <= px <= xmax:
+                    if wy < py and (min_y is None or wy > min_y):
+                        min_y = wy
+                    elif wy > py and (max_y is None or wy < max_y):
+                        max_y = wy
+
+        if None not in (min_x, max_x, min_y, max_y):
+            # Create closed boundary rectangle polyline
+            rect_h = self.draw_rectangle((min_x, min_y), (max_x, max_y), layer=layer)
+            return rect_h
+
+        return None
+
+    def join_entities(
+        self, handles: List[str], tolerance: float = 0.01
+    ) -> Optional[str]:
+        """Join loose connected lines and arcs into a continuous polyline."""
+        if not handles or len(handles) < 2:
+            return None
+
+        handle_set = set(str(h).strip() for h in handles)
+        lines = []
+        for e in list(self.msp):
+            if str(e.dxf.handle) in handle_set and e.dxftype() == "LINE":
+                p1 = (float(e.dxf.start[0]), float(e.dxf.start[1]))
+                p2 = (float(e.dxf.end[0]), float(e.dxf.end[1]))
+                lines.append((e, p1, p2))
+
+        if not lines:
+            return None
+
+        # Chain lines together by endpoint proximity
+        used = [False] * len(lines)
+        first_e, p1, p2 = lines[0]
+        used[0] = True
+        chain = [p1, p2]
+        layer = str(first_e.dxf.layer)
+        color = getattr(first_e.dxf, "color", 7)
+
+        changed = True
+        while changed:
+            changed = False
+            for i, (e, start, end) in enumerate(lines):
+                if used[i]:
+                    continue
+                # Try attaching to end of chain
+                last_pt = chain[-1]
+                if math.hypot(start[0] - last_pt[0], start[1] - last_pt[1]) <= tolerance:
+                    chain.append(end)
+                    used[i] = True
+                    changed = True
+                elif math.hypot(end[0] - last_pt[0], end[1] - last_pt[1]) <= tolerance:
+                    chain.append(start)
+                    used[i] = True
+                    changed = True
+                # Try attaching to start of chain
+                first_pt = chain[0]
+                if math.hypot(end[0] - first_pt[0], end[1] - first_pt[1]) <= tolerance:
+                    chain.insert(0, start)
+                    used[i] = True
+                    changed = True
+                elif math.hypot(start[0] - first_pt[0], start[1] - first_pt[1]) <= tolerance:
+                    chain.insert(0, end)
+                    used[i] = True
+                    changed = True
+
+        # Check if closed
+        is_closed = math.hypot(chain[0][0] - chain[-1][0], chain[0][1] - chain[-1][1]) <= tolerance
+        if is_closed and len(chain) > 2:
+            chain.pop()  # Drop redundant duplicate last point for closed polyline
+
+        # Delete original joined lines
+        for i, (e, _, _) in enumerate(lines):
+            if used[i]:
+                try:
+                    self.msp.delete_entity(e)
+                except Exception:
+                    pass
+
+        # Draw joined polyline
+        new_h = self.draw_polyline(chain, closed=is_closed, layer=layer, color=color)
+        return new_h
+
+    def trim_extend_entity(
+        self, handle: str, boundary_handle: str, mode: str = "trim"
+    ) -> bool:
+        """Trim or extend a line against a boundary edge."""
+        target, bound = None, None
+        for e in self.msp:
+            h = str(e.dxf.handle)
+            if h == str(handle):
+                target = e
+            elif h == str(boundary_handle):
+                bound = e
+
+        if not target or not bound or target.dxftype() != "LINE" or bound.dxftype() != "LINE":
+            return False
+
+        A = (float(target.dxf.start[0]), float(target.dxf.start[1]))
+        B = (float(target.dxf.end[0]), float(target.dxf.end[1]))
+        C = (float(bound.dxf.start[0]), float(bound.dxf.start[1]))
+        D = (float(bound.dxf.end[0]), float(bound.dxf.end[1]))
+
+        dx1, dy1 = B[0] - A[0], B[1] - A[1]
+        dx2, dy2 = D[0] - C[0], D[1] - C[1]
+        denom = dx1 * dy2 - dy1 * dx2
+        if abs(denom) < 1e-6:
+            return False  # Parallel lines
+
+        t = ((C[0] - A[0]) * dy2 - (C[1] - A[1]) * dx2) / denom
+        Px = A[0] + t * dx1
+        Py = A[1] + t * dy1
+        P = (Px, Py)
+
+        dA = math.hypot(A[0] - P[0], A[1] - P[1])
+        dB = math.hypot(B[0] - P[0], B[1] - P[1])
+
+        if mode.lower() == "trim":
+            # Trim off the segment beyond P (endpoint with larger distance to P becomes P)
+            if dA > dB:
+                target.dxf.start = (P[0], P[1], target.dxf.start[2] if len(target.dxf.start) > 2 else 0.0)
+            else:
+                target.dxf.end = (P[0], P[1], target.dxf.end[2] if len(target.dxf.end) > 2 else 0.0)
+        else:  # extend
+            # Extend endpoint that is closer to P to reach P
+            if dA < dB:
+                target.dxf.start = (P[0], P[1], target.dxf.start[2] if len(target.dxf.start) > 2 else 0.0)
+            else:
+                target.dxf.end = (P[0], P[1], target.dxf.end[2] if len(target.dxf.end) > 2 else 0.0)
+
+        return True
+
+
+
