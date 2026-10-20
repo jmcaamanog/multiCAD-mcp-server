@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security Test Isolation**: Fixed false negative in `tests/unit/test_security.py::TestPathTraversal::test_validate_export_path_blocks_traversal_attempts` by properly mocking `ConfigManager.output.allow_arbitrary_paths = False`.
 - **Dictionary Key Duplication**: Removed duplicate `"Spline"` key in `src/web/api.py` entity type mapping.
 
-## [0.2.3] - 2026-10-20
+## [0.2.4] - 2026-10-20
 
 ### Enhanced
 - **Glama TDQS Grade A+ Optimization**: Upgraded docstrings and schemas across all 15 MCP tools to comply with Glama's Tool Definition Quality Score (TDQS) rubric:
