@@ -266,37 +266,35 @@ def register_block_tools(mcp) -> None:
     def manage_blocks(
         operations: str,
     ) -> str:
-        """
-        Manage blocks: create, insert, list, query, and manage attributes.
+        """Create, insert, inspect, and manage reusable CAD blocks and attribute tags.
 
-        Args:
-            operations: Operations in SHORTHAND format (one per line):
+        Behavior:
+        - Mutation: Mutates drawing by adding block definitions (`create`), inserting block references (`insert`), or updating attribute tags (`set_attrs`). `list`, `info`, and `get_attrs` are read-only.
+        - Persistence: Block definitions and inserted instances persist in the DWG/DXF database.
+        - Side Effects: Auto-creates destination layer if nonexistent during insert.
 
-                list                                          → list
-                info|block_name|include                       → info|Door|both
-                insert|name|point|scale|rotation|layer|color  → insert|Door|10,20|1.5|90|walls|red
-                create|name|handles|point|description         → create|MyBlock|A1,B2|0,0|Desc
-                get_attrs|handle                              → get_attrs|A1B2C3
-                set_attrs|handle|attributes_json              → set_attrs|A1B2C3|{"TAG": "value"}
+        Usage Guidelines:
+        - When to Use: Call to insert reusable standard components (doors, windows, sanitaryware, electrical symbols, furniture), inspect block library definitions, or read/write block attribute tags (e.g. door width, fire rating).
+        - Sibling Routing / Alternatives:
+          * For drawing primitive 2D geometry (lines, rectangles, polylines), use `draw_entities`.
+          * For transforming or deleting arbitrary entity instances, use `manage_entities`.
+          * For external project references linked as DWG files, use `manage_xrefs`.
 
-                "include" = "info" (default), "references", or "both"
-                "handles" = comma-separated entity handles
-                "attributes_json" = JSON object with attribute tag -> value pairs
+        Shorthand Grammar:
+        - list: List all block definitions in drawing.
+        - info|block_name|include: Get definition details and reference count (include: info, references, both).
+        - insert|name|point|scale|rotation|layer|color: Insert block instance at point (e.g. insert|Door|10,20|1.5|90|walls|red).
+        - create|name|handles|base_point|description: Create new block definition from existing entity handles.
+        - get_attrs|handle: Query attribute key/value dictionary from a block reference handle.
+        - set_attrs|handle|attributes_json: Set attribute values on a block reference handle (e.g. set_attrs|A1|{"TAG":"val"}).
 
-                DEFAULTS: scale=1.0, rotation=0, layer=0, color=white, include=info
+        Defaults: scale=1.0, rotation=0, layer=0, color=white.
 
-                Examples:
-                    list
-                    info|Door|both
-                    insert|Door|10,20|1.5|90
-                    insert|Door|30,20|1.0|0|walls|blue
-                    get_attrs|A1B2C3
-                    set_attrs|A1B2C3|{"INTENSIDAD": "25A", "POLOS": "4P"}
-
-                JSON format also supported for backwards compatibility.
+        Parameters:
+        - operations: Shorthand string (one command per line) or JSON array of block operation objects.
 
         Returns:
-            JSON result with per-operation status
+            JSON string containing per-operation execution results, block details, and inserted handles.
         """
         try:
             ops_data = parse_block_ops_input(operations)

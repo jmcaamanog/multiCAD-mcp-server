@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multicad-mcp-server"
-version = "0.2.2"
+version = "0.2.3"
 description = "Universal Industrial-Grade MCP Server for AI CAD Control, Headless DXF Engine, AECO Standards, and CE3X ConTech Bridge"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -695,62 +695,42 @@ def register_drawing_tools(mcp):
     def draw_entities(
         entities: str,
     ) -> str:
-        """
-        Draw multiple entities of any type in a single operation.
+        """Create new 2D/3D geometric primitives, text, dimensions, leaders, and native tables.
 
-        Args:
-            entities: Entity specifications in SHORTHAND format (one per line):
+        Behavior:
+        - Mutation: Mutates the drawing database by creating and appending new entities.
+        - Persistence: Changes persist in the active drawing database and are written to DWG/DXF file upon save.
+        - Side Effects: Auto-creates destination layers if they do not exist. Automatically computes centroid and extents.
 
-                line|start|end|color|layer                    → line|0,0|10,10|red|walls
-                circle|center|radius|color                    → circle|5,5|3|blue
-                rect|corner1|corner2|color                    → rect|0,0|20,15
-                text|pos|text|height|color                    → text|5,5|Hello|2.5
-                arc|center|radius|start|end                   → arc|0,0|5|0|90
-                polyline|points(;)|closed|color               → polyline|0,0;10,10;20,0|closed
-                spline|points(;)|closed|color                 → spline|0,0;5,10;10,0
-                dimension|start|end|color                     → dimension|0,0|10,0
-                leader|puntos|texto|altura|color|capa         → leader|0,0;10,10|Mi nota|2.5|red
-                leader|grupo1~~grupo2~~...|texto|altura|color → leader|0,0;10,10~~0,0;-10,10|Nota
-                table|ins|rows|cols|row_h|col_w|title|headers|data → table|0,0|4|3|3|15|Precios|Item;Cant;Val|Acero;10;150~~Mano;5;120
+        Usage Guidelines:
+        - When to Use: Call whenever creating new geometry from scratch (lines, walls, circles, rectangles, polylines, text labels, architectural dimensions, multi-arrow leaders, or schedule tables).
+        - Sibling Routing / Alternatives:
+          * For modifying, transforming (move, rotate, scale), restyling, or deleting existing entities, use `manage_entities`.
+          * For inserting reusable component blocks (doors, windows, symbols) or creating block definitions, use `manage_blocks`.
+          * For creating paperspace presentation sheets, title blocks, and viewports, use `manage_layouts`.
+          * For attaching external DWG references or raster underlays, use `manage_xrefs`.
 
-                DEFAULTS: color=white, layer=0
+        Shorthand Grammar (one entity specification per line):
+        - line|start|end|color|layer                    → line|0,0|10,10|red|walls
+        - circle|center|radius|color                    → circle|5,5|3|blue
+        - rect|corner1|corner2|color                    → rect|0,0|20,15
+        - text|pos|text|height|color                    → text|5,5|Hello|2.5
+        - arc|center|radius|start|end                   → arc|0,0|5|0|90
+        - polyline|points(;)|closed|color               → polyline|0,0;10,10;20,0|closed
+        - spline|points(;)|closed|color                 → spline|0,0;5,10;10,0
+        - dimension|start|end|color                     → dimension|0,0|10,0
+        - leader|points|text|height|color|layer         → leader|0,0;10,10|Note|2.5|red
+        - leader|group1~~group2~~...|text|height|color  → leader|0,0;10,10~~0,0;-10,10|Note
+        - table|ins|rows|cols|row_h|col_w|title|headers|data → table|0,0|4|3|3|15|Precios|Item;Cant;Val|Acero;10;150~~Mano;5;120
 
-                Example:
-                    line|0,0|100,0|red|walls
-                    line|100,0|100,80|red|walls
-                    circle|50,40|10|blue
-                    text|50,40|Center|2.5|white
-                    leader|50,40;60,50|Dimension|2.5|blue
-                    leader|0,0;10,10~~20,0;10,10|Converging Arrows|2.5|red
-                    table|0,0|4|3|3|15|Precios|Item;Cant;Val|Acero;10;150~~Pintura;5;50
+        Defaults: color=white, layer=0.
+        Coordinates: "x,y" or "x,y,z". Points in a polyline/leader: semicolon-separated "0,0;10,10".
 
-                IMPORTANT for Leaders:
-                - Always creates an MLeader entity.
-                - Format: `leader|group1~~group2|text...`
-                - Each group is a list of points: `arrow_start;...;text_attach_point`
-                - To create multiple arrows pointing to the SAME text, ensure the LAST point
-                  of every group is the SAME (the text position).
-
-                IMPORTANT for Tables:
-                - Creates a native AutoCAD table entity.
-                - Row 0 is the Title. Row 1 contains column Headers. Row 2 and onwards are Data rows.
-                - Headers: Semicolon-separated values for the columns.
-                - Data: Rows separated by double tildes `~~`, and cell values within each row separated by semicolons `;`.
-
-                Example of Multi-Arrow Leader (Converging):
-                    `leader|10,10;50,50~~10,90;50,50|Label`
-                    -> Arrow 1 starts at 10,10
-                    -> Arrow 2 starts at 10,90
-                    -> Both converge at 50,50 (where text "Label" is placed)
-
-                Coordinates: "x,y" or "x,y,z"
-                Points within group: semicolon-separated "10,10;50,50"
-                Multiple groups: double-tilde separated "g1~~g2"
-
-                JSON format also supported for backwards compatibility.
+        Parameters:
+        - entities: Shorthand string (one command per line) or JSON array of entity specification objects.
 
         Returns:
-            JSON result with per-entity status and created handles
+            JSON string with created entity handles, status, and summary count.
         """
         try:
             entities_data = parse_drawing_input(entities)

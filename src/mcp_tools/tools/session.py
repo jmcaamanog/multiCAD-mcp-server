@@ -320,45 +320,38 @@ def register_session_tools(mcp):
     def manage_session(
         operations: str,
     ) -> str:
-        """
-        Manage CAD session: connection, view, and history operations.
+        """Manage CAD application lifecycle, COM connection, viewport controls, and undo/redo history.
 
-        Args:
-            operations: JSON array of operations. Each object must include
-                        an "action" field.
+        Behavior:
+        - Mutation: Controls external CAD application process, active COM session, and editor state.
+        - Persistence: Connection state persists across subsequent tool calls in the MCP server process.
+        - Side Effects: Can launch CAD application process (connect), terminate session (disconnect), or launch local web dashboard in browser (open_dashboard).
 
-                Supported actions and their fields:
+        Usage Guidelines:
+        - When to Use: Call to verify CAD connectivity, connect to running CAD, inspect CAD vendor info, or perform composite session operations (e.g. connect + zoom_extents + status).
+        - Sibling Routing / Alternatives:
+          * For pure camera, zoom, 3D viewpoints, and visual styles, prefer `manage_view`.
+          * For opening, saving, closing, or switching drawing files, use `manage_files`.
+          * For creating geometry, use `draw_entities`.
 
-                Connection:
-                - connect:        (no fields) — launches and connects to auto-detected CAD
-                - disconnect:     (no fields) — disconnects from CAD
-                - status:         (no fields) — shows connection status
-                - list_supported: (no fields) — lists available CAD applications
-                - check_running:  (no fields) — checks for running CAD without launching
+        Actions & Parameters:
+        - connect: Launches and connects to auto-detected CAD software (AutoCAD, ZWCAD, GstarCAD, BricsCAD).
+        - disconnect: Unlinks from active CAD COM session.
+        - status: Returns current connection status, active adapter type, and drawing name.
+        - list_supported: Lists installed and supported CAD application vendors.
+        - check_running: Detects running CAD processes without attaching.
+        - zoom_extents: Zooms active viewport to fit drawing extents.
+        - screenshot: Captures active CAD window raster screenshot as base64 PNG.
+        - export_view: Generates internal drawing raster preview.
+        - undo: Steps back in drawing history. Parameter: `count` (int, default: 1).
+        - redo: Steps forward in drawing history. Parameter: `count` (int, default: 1).
+        - open_dashboard: Launches web dashboard in browser. Parameters: `host`, `port`.
 
-                View:
-                - zoom_extents:   (no fields) — zoom to show all entities
-                - screenshot:     (no fields) — capture window screenshot (includes UI chrome)
-                - export_view:    (no fields) — export view using internal rendering (pure drawing, works when window is obscured)
-
-                History:
-                - undo:           [count] (default count: 1)
-                - redo:           [count] (default count: 1)
-
-                Dashboard:
-                - open_dashboard: [host, port] — open web dashboard in browser (default from config.json)
-
-                Example:
-                [
-                    {"action": "connect"},
-                    {"action": "zoom_extents"},
-                    {"action": "undo", "count": 3}
-                ]
-
-                Operations execute sequentially.
+        Parameters:
+        - operations: Shorthand string or JSON array of session action objects.
 
         Returns:
-            JSON result with per-operation status
+            JSON string with per-operation status, connection details, and results.
         """
         from mcp_tools.shorthand import parse_session_input
 
@@ -458,16 +451,33 @@ def register_session_tools(mcp):
     def manage_view(
         operations: str,
     ) -> str:
-        """
-        Manage CAD viewport, camera zoom, view presets, and visual styles.
+        """Control CAD camera viewport, display zoom, 3D viewpoint presets, and visual shading styles.
 
-        Shorthand:
-        - ze (or zoom_extents): Zoom to fit all entities
-        - zw|x1,y1|x2,y2 (or zoom_window): Zoom into bounding box
-        - zc|x,y|mag (or zoom_center): Center view on coordinate
-        - preset|top|bottom|front|back|left|right|sw_iso|se_iso: Set 3D or orthographic projection
-        - style|2d|wireframe|conceptual|realistic|shaded: Set visual rendering style
-        - screenshot / preview: Capture visual snapshot of the drawing
-        - undo|count / redo|count: History navigation
+        Behavior:
+        - Mutation: Modifies interactive viewport display state (zoom factor, center point, view direction, visual style) in the active CAD editor window. Does NOT modify drawing database entities.
+        - Persistence: Viewport changes persist in the active drawing session until manually adjusted or closed.
+        - Side Effects: Refreshes display graphics in active CAD GUI. In screenshot/preview operations, reads screen framebuffer and returns base64 image data.
+
+        Usage Guidelines:
+        - When to Use: Call whenever navigating the drawing, zooming to extents (ze), zooming into specific coordinates (zw), switching to 3D axonometric perspectives (preset|iso_sw), changing shading (style|realistic), or stepping through history (undo/redo).
+        - Sibling Routing / Alternatives:
+          * For creating, configuring, or activating paperspace sheet presentations and architectural viewports, use `manage_layouts`.
+          * For launching an interactive web-based canvas viewer for human inspection in the browser, use `show_drawing_viewer`.
+          * For exporting vector PDF sheets or SVG files to disk, use `export_data`.
+
+        Shorthand Grammar (one command per line or semicolon-separated):
+        - ze (or zoom_extents): Zoom to fit all drawing entities in viewport.
+        - zw|x1,y1|x2,y2 (or zoom_window): Zoom into rectangular window bounds.
+        - zc|x,y|mag (or zoom_center): Center view on coordinate (x,y) with optional magnification factor.
+        - preset|top|bottom|front|back|left|right|iso_sw|iso_se|iso_ne|iso_nw: Switch 3D or orthographic viewpoint.
+        - style|2d|wireframe|conceptual|realistic|shaded|hidden: Set visual rendering mode.
+        - screenshot / preview: Capture visual raster snapshot of current drawing viewport.
+        - undo|count / redo|count: Step backward or forward in CAD session history (default count: 1).
+
+        Parameters:
+        - operations: Shorthand string commands (one per line) or JSON array of operation objects.
+
+        Returns:
+            JSON string containing per-operation execution results, success status, and details.
         """
         return manage_session(operations)

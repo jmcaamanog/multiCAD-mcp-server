@@ -122,15 +122,32 @@ def register_xref_tools(mcp):
     def manage_xrefs(
         input: Union[str, List[Any], Dict[str, Any]],
     ) -> str:
-        """
-        Manage external references (XREF DWGs) and raster images/orthophotos.
+        """Manage external CAD references (DWG XREFs) and raster cartography or orthophoto underlays.
 
-        Shorthand:
-        - attach|path|[x,y]|[scale]|[rotation]: Attach DWG reference
-        - raster|path|[x,y]|[scale]: Attach raster image (PNG, JPG, TIFF)
-        - list: List all attached XREFs and images
-        - reload|name: Reload updated reference
-        - detach|name: Unlink reference from drawing
+        Behavior:
+        - Mutation: Modifies drawing reference table and external block definitions.
+        - Destructive Actions: Flag `detach|name` as destructive; removes reference link and unbinds geometry/images from drawing.
+        - Persistence: XREF and raster link paths persist in DWG/DXF database upon save.
+        - Side Effects: Reads external files from disk at specified paths during attachment.
+
+        Usage Guidelines:
+        - When to Use: Call to overlay external project files (structural models, MEP designs, topographies, aerial orthophotos, scans) as linked external references without duplicating geometry.
+        - Sibling Routing / Alternatives:
+          * For inserting self-contained reusable CAD blocks embedded in the current drawing, use `manage_blocks`.
+          * For opening, saving, or switching between independent drawing documents, use `manage_files`.
+
+        Shorthand Grammar:
+        - attach|path|[x,y]|[scale]|[rotation]: Attach DWG external reference.
+        - raster|path|[x,y]|[scale]: Attach raster image underlay (PNG, JPG, TIFF).
+        - list: List all currently attached XREFs and raster images.
+        - reload|name: Reload updated external reference file from disk.
+        - detach|name: Unlink and remove reference from drawing (destructive).
+
+        Parameters:
+        - input: Shorthand string, dictionary, or list containing action and parameters.
+
+        Returns:
+            JSON string with operation status, attached reference names, and paths.
         """
         adapter = get_current_adapter()
 

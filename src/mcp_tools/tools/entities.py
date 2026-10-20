@@ -915,41 +915,41 @@ def register_entity_tools(mcp):
     def manage_entities(
         operations: str,
     ) -> str:
-        """
-        Manage entities: select, transform, restyle, copy/paste.
+        """Modify, select, transform, restyle, compute areas, and manage existing drawing entities.
 
-        Args:
-            operations: Operations in SHORTHAND format (one per line):
+        Behavior:
+        - Mutation: Mutates drawing entities (positions, rotations, layers, colors, attributes).
+        - Destructive Actions: Flag `delete|handles` as DESTRUCTIVE; permanently deletes specified entity handles from drawing.
+        - Persistence: Geometric modifications persist in drawing database upon save.
+        - Side Effects: `copy`/`paste` accesses internal CAD clipboard buffers; `area_table` creates a new AutoCAD schedule table.
 
-                select|by|value               → select|layer|walls
-                move|handles|offset_x|offset_y → move|A1,B2|10|5
-                rotate|handles|angle|cx|cy    → rotate|A1|45|0|0
-                scale|handles|factor|cx|cy    → scale|A1|2.0|0|0
-                set_color|handles|color       → set_color|A1,B2|red
-                set_layer|handles|layer       → set_layer|A1|walls
-                set_color_bylayer|handles     → set_color_bylayer|A1,B2
-                copy|handles                  → copy|A1,B2
-                paste|base_point              → paste|100,200
-                delete|handles                → delete|A1,B2
-                area|handles                  → area|A1,B2 (or area|layer|A-ROOMS)
-                area_table|ins_x,ins_y|layer  → area_table|0,0|A-ROOMS|Cuadro Áreas
+        Usage Guidelines:
+        - When to Use: Call to modify existing drawing elements (select, move, rotate, scale, change color/layer, copy, paste, delete, measure area, insert area schedule table).
+        - Sibling Routing / Alternatives:
+          * For creating new geometry from scratch, use `draw_entities`.
+          * For inserting or creating reusable blocks, use `manage_blocks`.
+          * For whole-drawing spatial inspection or raycasting without modifying anything, use `inspect_drawing`.
+          * For layer lifecycle (create/delete layers, template application), use `manage_layers`.
 
-                "handles" = comma-separated entity handles (e.g. "A1B2,C3D4")
-                "by" = "color", "layer", or "type"
+        Shorthand Grammar (one command per line or semicolon-separated):
+        - select|by|value               → select|layer|walls (by: color, layer, type)
+        - move|handles|offset_x|offset_y → move|A1,B2|10|5
+        - rotate|handles|angle|cx|cy    → rotate|A1|45|0|0 (angle in degrees)
+        - scale|handles|factor|cx|cy    → scale|A1|2.0|0|0
+        - set_color|handles|color       → set_color|A1,B2|red
+        - set_layer|handles|layer       → set_layer|A1|walls
+        - set_color_bylayer|handles     → set_color_bylayer|A1,B2
+        - copy|handles                  → copy|A1,B2
+        - paste|base_point              → paste|100,200
+        - delete|handles                → delete|A1,B2 (DESTRUCTIVE)
+        - area|handles                  → area|A1,B2 (or area|layer|A-ROOMS)
+        - area_table|ins_x,ins_y|layer  → area_table|0,0|A-ROOMS|Cuadro Áreas
 
-                Example:
-                    select|layer|walls
-                    move|A1B2,C3D4|10|5
-                    area|layer|A-ESTANCIAS
-                    area_table|100,100|A-ESTANCIAS|Cuadro de Superficies
-                    set_color|A1B2,C3D4|red
-
-                JSON format also supported for backwards compatibility.
-
-
+        Parameters:
+        - operations: Shorthand string (one operation per line) or JSON array of entity operation objects.
 
         Returns:
-            JSON result with per-operation status
+            JSON string containing per-operation execution results, affected handles, and status.
         """
         try:
             ops_data = parse_entity_ops_input(operations)

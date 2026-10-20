@@ -356,39 +356,40 @@ def register_layer_tools(mcp):
     def manage_layers(
         operations: str,
     ) -> str:
-        """
-        Manage layers: create, modify, query, change visibility, or apply standard templates.
+        """Create, modify, toggle visibility, restyle, and apply standardized AECO layer templates.
 
-        Args:
-            operations: Operations in SHORTHAND format (one per line):
+        Behavior:
+        - Mutation: Mutates drawing layer table (creates layers, renames, changes colors, sets lineweights).
+        - Destructive Actions: Flag `delete|name` as destructive; removes target layer definition (layer cannot contain entities or be active layer 0).
+        - Persistence: Layer definitions, visibility states, colors, and lineweights persist in DWG/DXF database.
+        - Side Effects: Toggling layers (`on`/`off`) updates viewport entity visibility immediately.
 
-                create|name|color|lineweight  → create|walls|red|50
-                delete|name                   → delete|temp
-                rename|old|new                → rename|Layer1|furniture
-                on|names(,sep)                → on|walls,doors
-                off|names(,sep)               → off|Defpoints
-                set_color|name|color          → set_color|0|white
-                template|preset               → template|aeco (presets: aeco/cte, aia, mep)
-                is_on|name                    → is_on|walls
-                list                          → list
-                info                          → info
+        Usage Guidelines:
+        - When to Use: Call to organize drawing structure, enforce architectural CAD layer standards (`template|aeco`), isolate or hide geometry, set lineweights, or create target layers before drawing.
+        - Sibling Routing / Alternatives:
+          * For creating geometry on specific layers, use `draw_entities(entities="line|...|layer")`.
+          * For moving existing entities between layers, use `manage_entities(operations="set_layer|...")`.
+          * For paperspace layout sheets and viewports, use `manage_layouts`.
 
-                DEFAULTS: color=white, lineweight=25, template preset=aeco
+        Shorthand Grammar:
+        - create|name|color|lineweight: Create new layer (e.g. create|walls|red|50).
+        - delete|name: Delete empty layer (destructive).
+        - rename|old|new: Rename existing layer.
+        - on|names: Turn on layers (comma-separated, e.g. on|walls,doors).
+        - off|names: Turn off layers (e.g. off|furniture).
+        - set_color|name|color: Change layer color (e.g. set_color|walls|red).
+        - template|preset: Batch-create standard layer palette (presets: aeco/cte, aia, mep).
+        - is_on|name: Query if layer is currently visible.
+        - list: List all layers in drawing.
+        - info: Detailed layer summary with colors and states.
 
-                Example:
-                    template|aeco
-                    create|walls|red
-                    create|doors|blue
-                    off|Defpoints,notes
-                    set_color|0|white
+        Defaults: color=white, lineweight=25 (0.25mm), template preset=aeco.
 
-                JSON format also supported for backwards compatibility.
-
-
-
+        Parameters:
+        - operations: Shorthand string (one command per line) or JSON array of layer operation objects.
 
         Returns:
-            JSON result with per-operation status
+            JSON string containing per-operation execution results, layer list, and status.
         """
         try:
             ops_data = parse_layer_ops_input(operations)

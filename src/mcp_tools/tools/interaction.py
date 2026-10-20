@@ -109,18 +109,31 @@ def register_interaction_tools(mcp):
     def prompt_user(
         input: Union[str, List[Any], Dict[str, Any]],
     ) -> str:
-        """
-        Request interactive input from human user inside CAD application.
+        """Prompt the human user for interactive mouse clicks, coordinate picking, or command line input in CAD.
 
-        Actions:
-        - point|message|[base_x,base_y]: Prompts user to click a point in CAD viewport
-        - entity|message: Prompts user to click an entity on screen (returns handle, type, layer)
-        - distance|message|[base_point]: Prompts user to measure or specify distance
-        - string|message: Prompts user to enter text in CAD command line
+        Behavior:
+        - Mutation: Strictly read-only for drawing geometry; does not alter drawing database.
+        - Persistence: No persistent side effects or disk modifications.
+        - Side Effects: Pauses execution to display prompt message in CAD command line and crosshair cursor, awaiting user mouse click or keyboard input. Captures ESC / cancellation gracefully.
 
-        Example:
-            "point|Click where you want to place the door hinge"
-            "entity|Click the boundary wall to inspect"
+        Usage Guidelines:
+        - When to Use: Call for Human-in-the-Loop workflows whenever the AI needs the user to click a coordinate on screen, pick an entity visually with the crosshairs, measure a distance interactively, or confirm a string prompt.
+        - Sibling Routing / Alternatives:
+          * For automated programmatic coordinate queries without user intervention, use `inspect_drawing`.
+          * For selecting entities programmatically by layer/color/type, use `manage_entities(operations="select|...")`.
+          * For launching an interactive web-based canvas viewer in the browser, use `show_drawing_viewer`.
+
+        Shorthand Grammar:
+        - point|message|[base_x,base_y]: Prompts user to click a point in CAD viewport (e.g. point|Click door hinge point).
+        - entity|message: Prompts user to click an entity on screen (returns entity handle, type, and layer).
+        - distance|message|[base_point]: Prompts user to pick two points or measure distance in CAD.
+        - string|message: Prompts user to type text in CAD command bar.
+
+        Parameters:
+        - input: Shorthand string (action|message|optional_args), dictionary, or list.
+
+        Returns:
+            JSON string containing user response, picked coordinates (x, y, z), picked entity handles, or cancellation status.
         """
         adapter = get_current_adapter()
 

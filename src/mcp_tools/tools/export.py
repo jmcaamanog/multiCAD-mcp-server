@@ -255,22 +255,34 @@ def register_export_tools(mcp):
         filename: str = "drawing_data.xlsx",
         paper_size: str = "A3",
     ) -> str:
-        """
-        Extract or export drawing data.
+        """Extract drawing measurements, bill of quantities, budget standards, or plot vector PDF sheets.
 
-        Args:
-            scope: What to export.
-                   - "all": all entities in the drawing
-                   - "selected": only currently selected entities
-            format: Output format.
-                    - "json": return data as JSON (for analysis by the LLM)
-                    - "excel": save to Excel file
-                    - "bc3": save to FIEBDC-3 Spanish budget format
-                    - "pdf": plot drawing to standalone vector PDF
-            filename: Output filename.
-                      Default: "drawing_data.xlsx", "drawing.bc3", or "drawing.pdf".
-                      Saved to configured output directory.
-            paper_size: Paper size when format="pdf" (A4, A3, A2, A1, A0). Default: "A3".
+        Behavior:
+        - Mutation: Strictly read-only for drawing geometry; does not alter CAD entities or model database.
+        - Persistence: When format is "excel", "bc3", or "pdf", writes persistent files to configured output directory.
+        - Side Effects: Filesystem file creation/overwrite in output directory. If format="json", purely returns in-memory payload without disk writes.
+
+        Usage Guidelines:
+        - When to Use: Call to extract structured quantity takeoffs, generate Excel spreadsheets (.xlsx), export Spanish AECO construction budgets (.bc3 FIEBDC-3), plot publication vector PDFs (.pdf), or retrieve JSON drawing entities.
+        - Sibling Routing / Alternatives:
+          * For extracting thermal envelope parameters specifically formatted for energy certification in CE3X, use `export_ce3x_envelope`.
+          * For interactive browser visualization of the plan, use `show_drawing_viewer`.
+          * For spatial queries or bounding box summaries, use `inspect_drawing`.
+
+        Parameters:
+        - scope: Entity selection scope ("all", "selected"). Default: "all".
+          * "all": Processes all entities across visible layers.
+          * "selected": Restricts export to currently selected entities in CAD viewport.
+        - format: Output serialization format ("json", "excel", "bc3", "pdf"). Default: "json".
+          * "json": Returns parsed entity array directly to LLM context.
+          * "excel": Generates multi-tab Excel workbook with layer summaries, lengths, and areas.
+          * "bc3": Generates standard FIEBDC-3/2020 budget and measurement exchange file.
+          * "pdf": Plots modelspace/paperspace to standard vector PDF 1.4 document.
+        - filename: Output file name or relative path (e.g. "mediciones.xlsx", "presupuesto.bc3", "plano.pdf").
+        - paper_size: Paper standard when format="pdf" ("A4", "A3", "A2", "A1", "A0"). Default: "A3".
+
+        Returns:
+            JSON string containing export summary, file path, exported entity counts, or extracted entity data.
         """
         adapter = get_current_adapter()
         scope_lower = scope.lower()

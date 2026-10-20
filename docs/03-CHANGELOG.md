@@ -44,6 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security Test Isolation**: Fixed false negative in `tests/unit/test_security.py::TestPathTraversal::test_validate_export_path_blocks_traversal_attempts` by properly mocking `ConfigManager.output.allow_arbitrary_paths = False`.
 - **Dictionary Key Duplication**: Removed duplicate `"Spline"` key in `src/web/api.py` entity type mapping.
 
+## [0.2.3] - 2026-10-20
+
+### Enhanced
+- **Glama TDQS Grade A+ Optimization**: Upgraded docstrings and schemas across all 15 MCP tools to comply with Glama's Tool Definition Quality Score (TDQS) rubric:
+  - **Behavioral Disclosure**: Explicitly stated mutation rules (`Mutation`), persistence characteristics, side effects (disk writes, browser spawning), and destructive action warnings (`delete`, `detach`).
+  - **Usage Guidelines & Sibling Routing**: Added comprehensive "When to Use" guidance and explicit sibling differentiation for seamless LLM routing (`show_drawing_viewer` vs `inspect_drawing`, `manage_view` vs `manage_layouts`, `draw_entities` vs `manage_entities`).
+  - **Docstring Precision**: Eliminated promotional text in favor of crisp technical specifications and per-action required parameter tables.
+- **CI Matrix Alignment**: Standardized GitHub Actions workflow to run test suite on `windows-latest` for Python 3.10, 3.11, and 3.12, achieving 100% green test passes across all supported versions.
+
 ---
 
 ## [0.2.2] - 2026-10-20

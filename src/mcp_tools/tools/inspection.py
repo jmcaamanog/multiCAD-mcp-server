@@ -217,20 +217,35 @@ def register_inspection_tools(mcp):
         tolerance: float = 1.5,
         layer: Optional[str] = None,
     ) -> str:
-        """
-        Spatial Intelligence & Snapping: inspect drawing dimensions, intersections, and snap points.
+        """Inspect spatial intelligence, dimensions, geometric intersections, and object snaps.
 
-        Modes:
-        - "summary" (default): Global bounding box, room schedule, layers count, and ASCII minimap.
-        - "point": Raycasting query ("what is at coordinates X,Y?"). Requires `point="x,y"`.
-        - "intersections": Detect geometric crossing points between lines/entities. Optional: `handle1`, `handle2`, `layer`.
-        - "snap": Object snap assistant. Finds closest endpoint, midpoint, or center to `point`. Requires `point="x,y"`.
+        Behavior:
+        - Mutation: Strictly read-only; does not modify drawing entities, layers, or CAD state.
+        - Persistence: No persistent side effects or disk modifications.
+        - Side Effects: Computes spatial relationships in-memory from active CAD or DXF model.
 
-        Examples:
-            inspect_drawing(mode="summary")
-            inspect_drawing(mode="point", point="4.5, 3.2")
-            inspect_drawing(mode="intersections")
-            inspect_drawing(mode="snap", point="10.1, 0.05", snap_types="endpoint,midpoint")
+        Usage Guidelines:
+        - When to Use: Call whenever the AI needs spatial intelligence (drawing extents, room schedules, what entity is located at coordinate X,Y, line crossings, or nearest snap points).
+        - Sibling Routing / Alternatives:
+          * For launching an interactive graphical web viewer for human visual inspection, use `show_drawing_viewer`.
+          * For computing area or measuring specific entity handles, use `manage_entities(operations="area|...")`.
+          * For requesting interactive human mouse clicks in the CAD viewport, use `prompt_user`.
+
+        Modes & Parameters:
+        - mode: Inspection mode ("summary", "point", "intersections", "snap"). Default: "summary".
+          * "summary": Global bounding box, room schedule, layer inventory, and ASCII minimap.
+          * "point": Point-in-polygon raycasting query ("what room/space contains point X,Y?"). Requires `point="x,y"`.
+          * "intersections": Detect geometric crossings between entities. Optional: `handle1`, `handle2`, `layer`.
+          * "snap": Object snap assistant. Finds closest endpoint, midpoint, or center to `point`. Requires `point="x,y"`.
+        - point: Coordinates "x,y" or "x,y,z" (required for "point" and "snap" modes).
+        - handle1: Optional first entity handle to restrict intersection checks.
+        - handle2: Optional second entity handle to test intersection against handle1.
+        - snap_types: Comma-separated snap filters: "endpoint", "midpoint", "center". Default: "endpoint,midpoint,center".
+        - tolerance: Search radius for snap points in drawing units. Default: 1.5.
+        - layer: Optional layer name to filter intersection candidates.
+
+        Returns:
+            JSON string with mode-specific spatial data, coordinates, and matched entities.
         """
         adapter = get_current_adapter()
         data = _get_drawing_entities_data(adapter)
@@ -393,18 +408,26 @@ def register_inspection_tools(mcp):
         filename: str = "visor_cad.html",
         open_browser: bool = True,
     ) -> str:
-        """
-        Generate and launch an interactive HTML5 CAD Viewer in the web browser.
+        """Generate and launch an interactive HTML5 CAD Canvas viewer in the web browser.
 
-        Features:
-        - Smooth pan & zoom with mouse wheel and drag
-        - Interactive layer toggle panel (hide/show layers on the fly)
-        - Click on rooms to highlight and inspect usable area (m²), perimeter, and BIM data
-        - Dark/Light mode toggle and export buttons
+        Behavior:
+        - Mutation: Strictly read-only for CAD geometry; does not alter drawing database or active viewport.
+        - Persistence: Saves a standalone HTML viewer file to the configured output directory.
+        - Side Effects: Writes a self-contained HTML file to local disk. If open_browser is True, spawns an external process to open the system default web browser.
 
-        Args:
-            filename: HTML output filename (default: 'visor_cad.html')
-            open_browser: If True, automatically launches default system browser (default: True)
+        Usage Guidelines:
+        - When to Use: Call when a human user requests interactive visual exploration, panning/zooming, or clicking on rooms/layers in a graphical UI.
+        - Sibling Routing / Alternatives:
+          * For programmatic spatial queries (bounding box, point raycasting, snap points, ASCII map), use `inspect_drawing`.
+          * For exporting static documents or publication files (vector PDF, BC3, Excel), use `export_data`.
+          * For controlling viewport zoom/camera inside the active CAD software window, use `manage_view`.
+
+        Parameters:
+        - filename: Output HTML file name or relative path (default: 'visor_cad.html').
+        - open_browser: Whether to automatically launch default web browser (default: True).
+
+        Returns:
+            JSON string with status, absolute HTML file path, entity count, and browser launch result.
         """
         adapter = get_current_adapter()
         data = _get_drawing_entities_data(adapter)

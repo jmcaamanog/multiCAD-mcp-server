@@ -190,33 +190,33 @@ def register_file_tools(mcp):
     def manage_files(
         operations: str,
     ) -> str:
-        """
-        Manage drawing files with one or more operations in a single call.
+        """Open, save, create, close, list, and switch active CAD drawing files (.dwg, .dxf).
 
-        Args:
-            operations: Operations in SHORTHAND format (one per line):
+        Behavior:
+        - Mutation: Modifies document collection state. `save` writes files to disk; `new` initializes fresh drawing; `close` unloads drawing from CAD memory.
+        - Destructive Actions: Flag `close|false` as destructive if unsaved changes exist (discards edits without saving).
+        - Persistence: Saves document files permanently to disk in DWG or DXF formats.
+        - Side Effects: Switches active document context for all subsequent CAD operations.
 
-                save|path_or_filename|format  → save|/path/to/file.dwg
-                save|filename                 → save|backup.dwg
-                new                           → new
-                close|save_changes            → close|true
-                list                          → list
-                switch|drawing_name           → switch|floor_plan.dwg
+        Usage Guidelines:
+        - When to Use: Call to manage CAD file lifecycle (create blank drawing, save backup or work in progress, list open files, close tab, or switch active drawing).
+        - Sibling Routing / Alternatives:
+          * For plotting or exporting data/measurements into PDF, Excel, or BC3, use `export_data`.
+          * For referencing external drawings without opening them as active editing documents, use `manage_xrefs`.
+          * For CAD connection lifecycle (connecting to CAD software, status, undo/redo), use `manage_session`.
 
-                "format" = "dwg" (default), "dxf", "pdf"
-                "save_changes" = true/false (default: false)
+        Shorthand Grammar:
+        - new: Create a new blank drawing.
+        - save|filename|format: Save drawing to disk (formats: dwg, dxf, pdf. Default: dwg).
+        - close|save_changes: Close active drawing (save_changes: true/false. Default: false).
+        - list: List all currently open drawings and indicate active file.
+        - switch|drawing_name: Switch active document focus to specified open drawing.
 
-                Example:
-                    save|backup.dwg
-                    new
-                    switch|floor_plan.dwg
-
-                JSON format also supported for backwards compatibility.
-
-
+        Parameters:
+        - operations: Shorthand string (one command per line) or JSON array of file operation objects.
 
         Returns:
-            JSON result with per-operation status
+            JSON string containing per-operation execution results, active file names, and status.
         """
         try:
             ops_data = parse_file_ops_input(operations)

@@ -33,31 +33,38 @@ def register_annotation_tools(mcp):
         layer: Optional[str] = None,
         color: Optional[str] = None,
     ) -> str:
-        """
-        Smart architectural annotation and automated dimensioning.
+        """Create automated architectural annotations, centroid room labels, and linear dimension chains.
 
-        Actions:
-        - "label_spaces": Automatically place room name and calculated m² text at
-          the centroid of closed rooms/spaces.
-        - "auto_dimension": Automatically create linear dimension annotations for
-          bounding boxes ("overall") or individual polyline segments ("segments").
-        - "add_leader": Create a leader callout pointing to an entity or coordinate.
+        Behavior:
+        - Mutation: Mutates drawing by generating and placing new annotation text, dimensions, and leaders.
+        - Persistence: Inserted annotations persist in DWG/DXF database upon save.
+        - Side Effects: Auto-creates destination annotation layers (e.g. A-ANNO-TEXT, A-ANNO-DIMS) if nonexistent.
 
-        Args:
-            action: "label_spaces", "auto_dimension", or "add_leader" (default: "label_spaces")
-            handles: Specific entity handle(s) to process. If None, processes all spaces.
-            style: Dimension style: "overall" (bounding box) or "segments" (each wall/edge).
-            offset: Offset distance from geometry for dimension lines (default: 1.0).
-            text_height: Height of annotation text (default: 0.35).
-            prefix: Text prefix for space labels (e.g., "S = ").
-            suffix: Text suffix for space labels (default: " m²").
-            layer: Destination layer (default: "A-ANNO-TEXT" for labels, "A-ANNO-DIMS" for dims).
-            color: Color name or code for annotations.
+        Usage Guidelines:
+        - When to Use: Call to automatically label room centroids with computed areas (m²), generate overall or wall-by-wall linear dimension chains, or add leader callouts with arrowheads.
+        - Sibling Routing / Alternatives:
+          * For manually drafting single primitive dimensions or leaders with custom points, use `draw_entities(entities="dimension|... / leader|...")`.
+          * For modifying, moving, restyling, or deleting existing annotation entities, use `manage_entities`.
+          * For room scheduling tables, use `manage_entities(operations="area_table|...")`.
 
-        Examples:
-            manage_annotations(action="label_spaces")
-            manage_annotations(action="auto_dimension", style="overall", offset=1.5)
-            manage_annotations(action="auto_dimension", handles=["1A4"], style="segments")
+        Actions & Parameters:
+        - "label_spaces": Places text label with room name and computed area at centroid of closed room spaces.
+        - "auto_dimension": Generates exterior linear dimension chain along bounding box or wall segments.
+        - "add_leader": Inserts architectural callout leader pointing to specified geometry.
+
+        Parameters:
+        - action: Action to perform ("label_spaces", "auto_dimension", "add_leader"). Default: "label_spaces".
+        - handles: Optional entity handle or list of handles to annotate. If None, processes all spaces.
+        - style: Dimensioning style for "auto_dimension" ("overall" for global extents, "segments" for each wall). Default: "overall".
+        - offset: Offset distance in drawing units between geometry and dimension line. Default: 1.0.
+        - text_height: Text height for labels and dimensions in drawing units. Default: 0.35.
+        - prefix: Text prefix added before calculated area value (e.g. "Sup = "). Default: "".
+        - suffix: Text suffix appended after area value. Default: " m²".
+        - layer: Target layer name (default: "A-ANNO-TEXT" for space labels, "A-ANNO-DIMS" for dimensions).
+        - color: Optional color name or ACI number.
+
+        Returns:
+            JSON string containing created annotation handles, count, and status.
         """
         adapter = get_current_adapter()
         action_lower = action.lower().strip()

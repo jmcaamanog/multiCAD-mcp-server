@@ -32,30 +32,51 @@ def register_layout_tools(mcp):
         sheet_number: str = "1/1",
         unit: str = "m",
     ) -> str:
-        """
-        Manage AutoCAD paperspace layouts, sheets, viewports, and title blocks.
+        """Manage AutoCAD paperspace layouts, presentation sheets, viewports, and AECO title blocks.
 
-        Actions:
-        - "create": Create a new layout sheet (e.g. A3 landscape) with frame, viewport and title block.
-        - "list": List all layouts in the drawing.
-        - "activate": Set layout as active sheet.
-        - "delete": Remove a layout.
-        - "add_viewport": Add a custom viewport to an existing layout.
-        - "add_titleblock": Add a standardized AECO title block to a layout.
+        Behavior:
+        - Mutation: Mutates paperspace configurations, layout dictionaries, and sheet entities.
+        - Destructive Actions: Flag action="delete" as DESTRUCTIVE; permanently removes target layout sheet and all entities/viewports placed upon it. Cannot delete active layout or "Model" tab.
+        - Persistence: Layout definitions and viewport scales persist in drawing database upon save.
+        - Side Effects: Switches active tab in CAD interface when action="activate" or action="create" is called.
 
-        Args:
-            action: Action to perform ("create", "list", "activate", "delete", "add_viewport", "add_titleblock")
-            name: Layout name (e.g. "Plano_01_Distribucion")
-            paper_size: Standard paper format ("A4", "A3", "A2", "A1", "A0", "LETTER", "TABLOID")
-            orientation: Sheet orientation ("landscape" or "portrait")
-            scale: Architectural scale ("1:50", "1:100", "1:20", "1:200", "1:500", "1:10", "1:1")
-            model_center: Modelspace center coordinates to focus ("x,y", e.g. "15.0, 10.0")
-            viewport_rect: Custom viewport center and size "cx,cy,w,h" (in paper mm)
-            title: Project or sheet title for title block
-            author: Author or collegiate engineer name
-            date: Drawing date
-            sheet_number: Sheet code or numbering (e.g. "PL-01", "1/4")
-            unit: Model units ("m" for meters, "mm" for millimeters)
+        Usage Guidelines:
+        - When to Use: Call to compose architectural presentation sheets, configure standard paper formats (A4-A0), insert scaled modelspace viewports, add standardized title blocks, or switch active sheets.
+        - Sibling Routing / Alternatives:
+          * For adjusting camera zoom, pan, or visual style inside active modelspace viewport, use `manage_view`.
+          * For exporting or plotting finished sheet to vector PDF document, use `export_data(format="pdf")`.
+          * For creating 2D/3D geometry in modelspace, use `draw_entities`.
+
+        Actions & Per-Action Required Parameters:
+        - "create": Create new layout sheet with border frame, viewport, and title block.
+          * Required: `name`, `paper_size`, `orientation`, `scale`.
+        - "list": List all layouts in drawing with active status.
+          * Required: (none).
+        - "activate": Switch active CAD workspace tab to this layout.
+          * Required: `name`.
+        - "delete": (DESTRUCTIVE) Permanently delete named layout sheet.
+          * Required: `name` (cannot delete active layout or "Model").
+        - "add_viewport": Add architectural viewport to existing layout.
+          * Required: `name`, `scale`. Optional: `model_center`, `viewport_rect`.
+        - "add_titleblock": Add AECO standard title block with metadata.
+          * Required: `name`, `title`, `author`, `sheet_number`.
+
+        Parameters:
+        - action: Action to perform ("create", "list", "activate", "delete", "add_viewport", "add_titleblock"). Default: "create".
+        - name: Layout sheet name (e.g. "Plano_01_Distribucion").
+        - paper_size: Paper standard ("A4", "A3", "A2", "A1", "A0", "LETTER", "TABLOID"). Default: "A3".
+        - orientation: Sheet orientation ("landscape", "portrait"). Default: "landscape".
+        - scale: Architectural scale ("1:50", "1:100", "1:20", "1:200", "1:500", "1:10", "1:1"). Default: "1:50".
+        - model_center: Center coordinate in modelspace to focus ("x,y", e.g. "15.0, 10.0").
+        - viewport_rect: Viewport center and dimensions in paper mm ("cx,cy,w,h", e.g. "210,148,380,260").
+        - title: Project or sheet title for title block.
+        - author: Designer, collegiate engineer, or author name.
+        - date: Date string for title block.
+        - sheet_number: Sheet index or code (e.g. "PL-01", "1/4"). Default: "1/1".
+        - unit: Model units ("m" for meters, "mm" for millimeters). Default: "m".
+
+        Returns:
+            JSON string with action result, layout details, and success status.
         """
         adapter = get_current_adapter()
         action_lower = action.lower().strip()

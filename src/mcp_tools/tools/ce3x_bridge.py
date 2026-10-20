@@ -164,22 +164,27 @@ def register_ce3x_bridge_tools(mcp):
         building_type: str = "vivienda_individual",
         filename: str = "envolvente_ce3x.json",
     ) -> str:
-        """
-        Extract CAD thermal building envelope parameters for CE3X energy certification.
+        """Extract CAD thermal building envelope parameters for CE3X energy certification.
 
-        Computes:
-        - Wall surface areas and orientations (N, S, E, W) by normal vector geometry
-        - Associated openings and solar orientation
-        - Usable floor area
+        Behavior:
+        - Mutation: Strictly read-only for CAD geometry; does not alter drawing database or active viewport.
+        - Persistence: Saves a standardized JSON envelope file to the configured output directory.
+        - Side Effects: Filesystem write of the output JSON file.
 
-        Args:
-            wall_height: Clear floor-to-ceiling height in meters (default: 2.70m)
-            climate_zone: CTE climate zone (e.g., "A3", "C1", "D3", default: "C1")
-            building_type: Building typology (default: "vivienda_individual")
-            filename: Output JSON filename (saved to configured output directory)
+        Usage Guidelines:
+        - When to Use: Call when bridging CAD floor plans to energy certification workflows (CE3X-MCP-SERVER, CTE DB-HE, or RD 390/2021). Computes exterior wall surface areas, wall azimuth orientations (N, S, E, W) by normal vector geometry, associated window openings, and usable floor area.
+        - Sibling Routing / Alternatives:
+          * For generic drawing takeoffs, Excel spreadsheets, or FIEBDC-3 budgets, use `export_data`.
+          * For spatial queries or room area schedules without thermal calculations, use `inspect_drawing` or `manage_entities(operations="area|...")`.
+
+        Parameters:
+        - wall_height: Clear floor-to-ceiling height in meters. Default: 2.70.
+        - climate_zone: CTE climate zone (e.g., "A3", "C1", "D3"). Default: "C1".
+        - building_type: Building typology ("vivienda_individual", "bloque_viviendas", "terciario"). Default: "vivienda_individual".
+        - filename: Output JSON filename. Default: "envolvente_ce3x.json".
 
         Returns:
-            JSON payload ready for direct ingestion by CE3X-MCP-SERVER.
+            JSON string containing CTE thermal envelope parameters, ready for direct ingestion by CE3X-MCP-SERVER.
         """
         adapter = get_current_adapter()
         payload = extract_thermal_envelope(
