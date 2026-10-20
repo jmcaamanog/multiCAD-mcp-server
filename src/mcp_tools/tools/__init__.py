@@ -25,6 +25,7 @@ from .xrefs import register_xref_tools
 from .ce3x_bridge import register_ce3x_bridge_tools
 from .inspection import register_inspection_tools
 from .annotations import register_annotation_tools
+from .layouts import register_layout_tools
 
 __all__ = [
     "register_session_tools",
@@ -39,5 +40,6 @@ __all__ = [
     "register_ce3x_bridge_tools",
     "register_inspection_tools",
     "register_annotation_tools",
+    "register_layout_tools",
 ]
 

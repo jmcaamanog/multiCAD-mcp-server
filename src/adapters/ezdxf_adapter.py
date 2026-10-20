@@ -1855,5 +1855,179 @@ class EzdxfAdapter(CADInterface):
 
         return True
 
+    # ========== Layout & Paperspace Management ==========
 
+    def list_layouts(self) -> List[Dict[str, Any]]:
+        """List all presentation layouts in the DXF document."""
+        active_name = ""
+        try:
+            active_name = self.doc.layouts.active_layout().name
+        except Exception:
+            pass
 
+        results = []
+        for l in self.doc.layouts:
+            results.append({
+                "name": l.name,
+                "is_active": (l.name == active_name),
+                "is_modelspace": l.is_modelspace,
+            })
+        return results
+
+    def create_layout(
+        self,
+        name: str,
+        paper_size: str = "A3",
+        orientation: str = "landscape",
+        margins: Tuple[float, float, float, float] = (10.0, 10.0, 10.0, 10.0),
+    ) -> Dict[str, Any]:
+        """Create a new paperspace layout with standard paper size and frame."""
+        paper_dims = {
+            "A4": (297.0, 210.0),
+            "A3": (420.0, 297.0),
+            "A2": (594.0, 420.0),
+            "A1": (841.0, 594.0),
+            "A0": (1189.0, 841.0),
+            "LETTER": (279.4, 215.9),
+            "TABLOID": (431.8, 279.4),
+        }
+        pw, ph = paper_dims.get(paper_size.upper(), (420.0, 297.0))
+        if orientation.lower() == "portrait":
+            pw, ph = ph, pw
+
+        if name in self.doc.layouts:
+            raise CADOperationError("create_layout", f"Layout '{name}' already exists.")
+
+        layout = self.doc.layouts.new(name)
+        try:
+            layout.page_setup(size=(pw, ph), margins=margins, units="mm")
+        except Exception:
+            pass
+
+        # Add outer border frame
+        left, bottom, right, top = margins
+        frame_pts = [
+            (left, bottom),
+            (pw - right, bottom),
+            (pw - right, ph - top),
+            (left, ph - top),
+        ]
+        layout.add_lwpolyline(frame_pts, close=True, dxfattribs={"layer": "0", "color": 7})
+
+        return {
+            "success": True,
+            "name": name,
+            "paper_size": paper_size.upper(),
+            "width_mm": pw,
+            "height_mm": ph,
+            "orientation": orientation.lower(),
+        }
+
+    def activate_layout(self, name: str) -> bool:
+        """Switch active layout in DXF document."""
+        if name not in self.doc.layouts:
+            return False
+        self.doc.layouts.set_active_layout(name)
+        return True
+
+    def delete_layout(self, name: str) -> bool:
+        """Delete layout by name in DXF document."""
+        if name not in self.doc.layouts:
+            return False
+        if name.lower() in ("model", "modelspace"):
+            raise CADOperationError("delete_layout", "Cannot delete Modelspace.")
+        self.doc.layouts.delete(name)
+        return True
+
+    def add_viewport(
+        self,
+        layout_name: str,
+        center: Tuple[float, float],
+        width: float,
+        height: float,
+        view_center: Tuple[float, float] = (0.0, 0.0),
+        scale: str = "1:50",
+        unit: str = "m",
+    ) -> Optional[str]:
+        """Add modelspace viewport to a paperspace layout."""
+        if layout_name not in self.doc.layouts:
+            raise CADOperationError("add_viewport", f"Layout '{layout_name}' not found.")
+        layout = self.doc.layouts.get(layout_name)
+
+        scale_factor = 50.0
+        if ":" in scale:
+            parts = scale.split(":")
+            try:
+                scale_factor = float(parts[1]) / float(parts[0])
+            except Exception:
+                scale_factor = 50.0
+
+        vh = (height / 1000.0) * scale_factor if unit == "m" else height * scale_factor
+        vp = layout.add_viewport(
+            center=center,
+            size=(width, height),
+            view_center_point=view_center,
+            view_height=vh,
+        )
+        return str(vp.dxf.handle)
+
+    def add_titleblock(
+        self,
+        layout_name: str,
+        title: str,
+        author: str = "",
+        date: str = "",
+        scale: str = "1:50",
+        sheet_number: str = "1/1",
+        paper_size: str = "A3",
+        orientation: str = "landscape",
+    ) -> Dict[str, Any]:
+        """Insert standardized AECO title block into layout."""
+        if layout_name not in self.doc.layouts:
+            raise CADOperationError("add_titleblock", f"Layout '{layout_name}' not found.")
+        layout = self.doc.layouts.get(layout_name)
+
+        paper_dims = {
+            "A4": (297.0, 210.0),
+            "A3": (420.0, 297.0),
+            "A2": (594.0, 420.0),
+            "A1": (841.0, 594.0),
+            "A0": (1189.0, 841.0),
+            "LETTER": (279.4, 215.9),
+            "TABLOID": (431.8, 279.4),
+        }
+        pw, ph = paper_dims.get(paper_size.upper(), (420.0, 297.0))
+        if orientation.lower() == "portrait":
+            pw, ph = ph, pw
+
+        tb_w = 160.0
+        tb_h = 42.0
+        x0 = pw - 10.0 - tb_w
+        y0 = 10.0
+
+        # Outer box
+        layout.add_lwpolyline([
+            (x0, y0), (x0 + tb_w, y0), (x0 + tb_w, y0 + tb_h), (x0, y0 + tb_h)
+        ], close=True, dxfattribs={"color": 7})
+
+        # Dividing lines
+        layout.add_line((x0, y0 + 24.0), (x0 + tb_w, y0 + 24.0), dxfattribs={"color": 7})
+        layout.add_line((x0, y0 + 12.0), (x0 + tb_w, y0 + 12.0), dxfattribs={"color": 7})
+        layout.add_line((x0 + 95.0, y0), (x0 + 95.0, y0 + 24.0), dxfattribs={"color": 7})
+
+        # Text labels
+        layout.add_text(title.upper(), dxfattribs={"height": 3.5, "color": 7}).set_placement((x0 + 4.0, y0 + 30.0))
+        layout.add_text(f"AUTOR: {author}" if author else "AUTOR: multiCAD-MCP", dxfattribs={"height": 2.2, "color": 8}).set_placement((x0 + 4.0, y0 + 16.0))
+        layout.add_text(f"FECHA: {date}" if date else "FECHA: -", dxfattribs={"height": 2.2, "color": 8}).set_placement((x0 + 99.0, y0 + 16.0))
+        layout.add_text(f"ESCALA: {scale}", dxfattribs={"height": 2.2, "color": 8}).set_placement((x0 + 4.0, y0 + 4.5))
+        layout.add_text(f"PLANO: {sheet_number}", dxfattribs={"height": 2.2, "color": 8}).set_placement((x0 + 99.0, y0 + 4.5))
+
+        return {
+            "success": True,
+            "layout": layout_name,
+            "title": title,
+            "author": author,
+            "scale": scale,
+            "sheet_number": sheet_number,
+            "position": (round(x0, 2), round(y0, 2)),
+        }

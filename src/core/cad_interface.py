@@ -1348,6 +1348,118 @@ class CADInterface(ABC):
         """
         return False
 
+    # ========== Layout & Paperspace Management ==========
+
+    def list_layouts(self) -> List[Dict[str, Any]]:
+        """
+        List all presentation layouts in the active drawing.
+
+        Returns:
+            List[Dict[str, Any]]: Information on layouts (name, active, modelspace)
+        """
+        return []
+
+    def create_layout(
+        self,
+        name: str,
+        paper_size: str = "A3",
+        orientation: str = "landscape",
+        margins: Tuple[float, float, float, float] = (10.0, 10.0, 10.0, 10.0),
+    ) -> Dict[str, Any]:
+        """
+        Create a new paperspace presentation layout.
+
+        Args:
+            name: Layout name
+            paper_size: Standard paper size (A4, A3, A2, A1, A0, etc.)
+            orientation: "landscape" or "portrait"
+            margins: (left, bottom, right, top) in mm
+
+        Returns:
+            Dict[str, Any]: Layout metadata
+        """
+        return {"success": False, "error": "Not implemented"}
+
+    def activate_layout(self, name: str) -> bool:
+        """
+        Activate a layout by name.
+
+        Args:
+            name: Layout name
+
+        Returns:
+            bool: True if activated successfully
+        """
+        return False
+
+    def delete_layout(self, name: str) -> bool:
+        """
+        Delete a layout by name.
+
+        Args:
+            name: Layout name
+
+        Returns:
+            bool: True if deleted
+        """
+        return False
+
+    def add_viewport(
+        self,
+        layout_name: str,
+        center: Tuple[float, float],
+        width: float,
+        height: float,
+        view_center: Tuple[float, float] = (0.0, 0.0),
+        scale: str = "1:50",
+        unit: str = "m",
+    ) -> Optional[str]:
+        """
+        Add a modelspace viewport to a paperspace layout.
+
+        Args:
+            layout_name: Target layout
+            center: Viewport center point (x, y) on paper in mm
+            width: Viewport width in mm
+            height: Viewport height in mm
+            view_center: Model center to focus (x, y) in model units
+            scale: Architectural scale (e.g. "1:50", "1:100")
+            unit: Model units ("m" or "mm")
+
+        Returns:
+            Optional[str]: Handle of created viewport
+        """
+        return None
+
+    def add_titleblock(
+        self,
+        layout_name: str,
+        title: str,
+        author: str = "",
+        date: str = "",
+        scale: str = "1:50",
+        sheet_number: str = "1/1",
+        paper_size: str = "A3",
+        orientation: str = "landscape",
+    ) -> Dict[str, Any]:
+        """
+        Insert standardized AECO title block into layout.
+
+        Args:
+            layout_name: Target layout
+            title: Sheet title
+            author: Author/technician
+            date: Date string
+            scale: Scale string
+            sheet_number: Sheet number
+            paper_size: Paper size for placement calculations
+            orientation: Orientation
+
+        Returns:
+            Dict[str, Any]: Title block metadata
+        """
+        return {"success": False, "error": "Not implemented"}
+
     # ========== Utility Methods ==========
 
 

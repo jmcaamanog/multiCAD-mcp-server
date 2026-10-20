@@ -28,6 +28,7 @@ from mcp_tools.tools import (
     register_ce3x_bridge_tools,
     register_inspection_tools,
     register_annotation_tools,
+    register_layout_tools,
 )
 from web.api import api_app, log_handler
 
@@ -92,6 +93,9 @@ def register_all_tools():
 
     register_annotation_tools(mcp)
     logger.debug("  ✓ Smart annotation tools registered")
+
+    register_layout_tools(mcp)
+    logger.debug("  ✓ Layout and sheet presentation tools registered")
 
 
     logger.info("All MCP tools registered successfully")

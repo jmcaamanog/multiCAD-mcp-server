@@ -1007,3 +1007,60 @@ def parse_session_input(
     entries = _split_entries(input_str)
     return [parse_session_op_shorthand(entry) for entry in entries]
 
+
+# ========== Layout Operations Parser ==========
+
+LAYOUT_OP_FIELDS: Dict[str, FieldList] = {
+    "list": [],
+    "create": [
+        ("name", False, "Plano_01"),
+        ("paper_size", False, "A3"),
+        ("orientation", False, "landscape"),
+        ("scale", False, "1:50"),
+        ("title", False, None),
+    ],
+    "activate": [
+        ("name", True, None),
+    ],
+    "delete": [
+        ("name", True, None),
+    ],
+    "viewport": [
+        ("name", True, None),
+        ("viewport_rect", True, None),
+        ("scale", False, "1:50"),
+        ("model_center", False, "0,0"),
+    ],
+    "titleblock": [
+        ("name", True, None),
+        ("title", True, "PLANO DE PROYECTO"),
+        ("author", False, ""),
+        ("scale", False, "1:50"),
+        ("sheet_number", False, "1/1"),
+    ],
+}
+
+
+def parse_layout_op_shorthand(line: str) -> Dict[str, Any]:
+    """Parse layout operation shorthand line like 'create|Plano_01|A3|landscape|1:50'."""
+    parts = [p.strip() for p in line.split("|")]
+    if not parts or not parts[0]:
+        return {"error": "Empty input"}
+
+    action = parts[0].lower()
+    if action not in LAYOUT_OP_FIELDS:
+        return {"action": action, "error": f"Unknown layout action: {action}"}
+
+    fields = LAYOUT_OP_FIELDS[action]
+    spec: Dict[str, Any] = {"action": action}
+
+    for i, (field_name, required, default) in enumerate(fields):
+        val_idx = i + 1
+        if val_idx < len(parts) and parts[val_idx]:
+            spec[field_name] = parts[val_idx]
+        elif default is not None:
+            spec[field_name] = default
+
+    return spec
+
+
