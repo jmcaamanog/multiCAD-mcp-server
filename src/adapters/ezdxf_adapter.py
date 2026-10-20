@@ -343,9 +343,15 @@ class EzdxfAdapter(CADInterface):
         layer: str = "0",
         _skip_refresh: bool = False,
     ) -> str:
-        """Draw a hatch boundary."""
         attribs = self._get_dxfattribs(layer, color, 0)
         hatch = self.msp.add_hatch(color=attribs["color"], dxfattribs=attribs)
+
+        pname = pattern.strip().upper()
+        if pname == "SOLID":
+            hatch.set_solid_fill()
+        else:
+            hatch.set_pattern_fill(pname, scale=float(scale), angle=float(angle))
+
         pts = [(float(p[0]), float(p[1])) for p in boundary_points]
         hatch.paths.add_polyline_path(pts, is_closed=True)
         return str(hatch.dxf.handle)

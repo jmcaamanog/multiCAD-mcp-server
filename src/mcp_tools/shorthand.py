@@ -137,6 +137,14 @@ ENTITY_FIELDS: Dict[str, FieldList] = {
         ("color", False, "cyan"),
         ("layer", False, "A-CARP-VENT"),
     ],
+    "hatch": [
+        ("points", True, None),
+        ("pattern", False, "SOLID"),
+        ("scale", False, 1.0),
+        ("angle", False, 0.0),
+        ("color", False, "white"),
+        ("layer", False, "0"),
+    ],
 }
 
 # Type aliases for entities
@@ -146,6 +154,8 @@ ENTITY_ALIASES = {
     "muro": "wall",
     "puerta": "door",
     "ventana": "window",
+    "sombreado": "hatch",
+    "rayado": "hatch",
 }
 
 
@@ -234,6 +244,7 @@ def parse_entity_shorthand(line: str) -> Dict[str, Any]:
                 "thickness",
                 "width",
                 "angle",
+                "scale",
             ):
                 spec[field_name] = _try_number(value)
             else:
