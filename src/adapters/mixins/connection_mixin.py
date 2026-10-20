@@ -13,7 +13,9 @@ if sys.platform == "win32":
     import pythoncom
     import pywintypes
 else:
-    raise ImportError("AutoCAD adapter requires Windows OS with COM support")
+    win32com = None  # type: ignore[assignment]
+    pythoncom = None  # type: ignore[assignment]
+    pywintypes = None  # type: ignore[assignment]
 
 from core import CADConnectionError
 
@@ -55,6 +57,9 @@ class ConnectionMixin:
         """
         try:
             logger.info(f"Connecting to {self.cad_type}...")
+
+            if sys.platform != "win32" or win32com is None or pythoncom is None:
+                raise CADConnectionError(f"{self.cad_type} requires Windows OS with COM automation support")
 
             # Initialize COM for this thread
             # CoInitialize() may raise if already initialized, which is fine
