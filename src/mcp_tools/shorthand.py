@@ -310,7 +310,29 @@ ENTITY_OP_FIELDS: Dict[str, FieldList] = {
     "get_metadata": [
         ("handle", True, None),
     ],
+    "offset": [
+        ("handle", True, None),
+        ("distance", True, None),
+        ("side_point", False, None),
+    ],
+    "fillet": [
+        ("handles", True, None),
+        ("radius", False, 0.0),
+    ],
+    "chamfer": [
+        ("handles", True, None),
+        ("dist1", False, 0.5),
+        ("dist2", False, 0.5),
+    ],
+    "explode": [
+        ("handles", True, None),
+    ],
+    "matchprop": [
+        ("source_handle", True, None),
+        ("target_handles", True, None),
+    ],
 }
+
 
 
 def parse_entity_op_shorthand(line: str) -> Dict[str, Any]:
@@ -357,10 +379,15 @@ def parse_entity_op_shorthand(line: str) -> Dict[str, Any]:
                 "center_y",
                 "row_height",
                 "col_width",
+                "distance",
+                "radius",
+                "dist1",
+                "dist2",
             ):
                 spec[field_name] = _try_number(value)
             else:
                 spec[field_name] = value
+
         elif default is not None:
             spec[field_name] = default
 

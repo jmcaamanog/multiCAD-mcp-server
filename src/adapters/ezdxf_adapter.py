@@ -1433,3 +1433,246 @@ class EzdxfAdapter(CADInterface):
             del self._xrefs[name]
             return True
         return False
+
+    def offset_entity(
+        self, handle: str, distance: float, side_point: Optional[Coordinate] = None
+    ) -> List[str]:
+        """Create a parallel offset of an entity."""
+        e = None
+        for entity in self.msp:
+            if str(entity.dxf.handle) == str(handle):
+                e = entity
+                break
+        if not e:
+            return []
+
+        dxftype = e.dxftype()
+        layer = str(e.dxf.layer)
+        color = getattr(e.dxf, "color", 7)
+
+        if dxftype == "LINE":
+            p1 = (float(e.dxf.start[0]), float(e.dxf.start[1]))
+            p2 = (float(e.dxf.end[0]), float(e.dxf.end[1]))
+            dx = p2[0] - p1[0]
+            dy = p2[1] - p1[1]
+            length = math.hypot(dx, dy)
+            if length == 0:
+                return []
+            nx = -dy / length
+            ny = dx / length
+            np1 = (p1[0] + nx * distance, p1[1] + ny * distance, 0.0)
+            np2 = (p2[0] + nx * distance, p2[1] + ny * distance, 0.0)
+            new_h = self.draw_line(np1, np2, layer=layer, color=color)
+            return [new_h]
+
+        elif dxftype in ("CIRCLE", "ARC"):
+            cx, cy = float(e.dxf.center[0]), float(e.dxf.center[1])
+            new_r = max(0.01, float(e.dxf.radius) + distance)
+            new_h = self.draw_circle((cx, cy), new_r, layer=layer, color=color)
+            return [new_h]
+
+        elif dxftype in ("LWPOLYLINE", "POLYLINE"):
+            if dxftype == "LWPOLYLINE":
+                pts = [(float(p[0]), float(p[1])) for p in e.get_points()]
+            else:
+                pts = [(float(v.dxf.location[0]), float(v.dxf.location[1])) for v in e.vertices]
+            n = len(pts)
+            if n < 2:
+                return []
+            is_closed = getattr(e, "is_closed", False)
+
+            # Compute edge normals and shift edges
+            shifted_lines = []
+            m = n if is_closed else n - 1
+            for i in range(m):
+                p1 = pts[i]
+                p2 = pts[(i + 1) % n]
+                dx = p2[0] - p1[0]
+                dy = p2[1] - p1[1]
+                L = math.hypot(dx, dy)
+                if L == 0:
+                    continue
+                nx = -dy / L
+                ny = dx / L
+                shifted_lines.append((
+                    (p1[0] + nx * distance, p1[1] + ny * distance),
+                    (p2[0] + nx * distance, p2[1] + ny * distance),
+                ))
+
+            if not shifted_lines:
+                return []
+
+            # Intersect consecutive shifted edges
+            new_pts = []
+            k = len(shifted_lines)
+            for i in range(k):
+                l1 = shifted_lines[i]
+                l2 = shifted_lines[(i + 1) % k]
+                # Intersect l1 and l2
+                p1, p2 = l1
+                p3, p4 = l2
+                dx1, dy1 = p2[0] - p1[0], p2[1] - p1[1]
+                dx2, dy2 = p4[0] - p3[0], p4[1] - p3[1]
+                denom = dx1 * dy2 - dy1 * dx2
+                if abs(denom) > 1e-6:
+                    t = ((p3[0] - p1[0]) * dy2 - (p3[1] - p1[1]) * dx2) / denom
+                    ix = p1[0] + t * dx1
+                    iy = p1[1] + t * dy1
+                    new_pts.append((round(ix, 4), round(iy, 4)))
+                else:
+                    new_pts.append(p2)
+
+            if new_pts:
+                new_h = self.draw_polyline(new_pts, closed=is_closed, layer=layer, color=color)
+                return [new_h]
+
+        return []
+
+    def fillet_entities(
+        self, handle1: str, handle2: str, radius: float = 0.0
+    ) -> Optional[str]:
+        """Fillet two lines with radius (0 for sharp corner join)."""
+        e1, e2 = None, None
+        for entity in self.msp:
+            h = str(entity.dxf.handle)
+            if h == str(handle1):
+                e1 = entity
+            elif h == str(handle2):
+                e2 = entity
+        if not e1 or not e2 or e1.dxftype() != "LINE" or e2.dxftype() != "LINE":
+            return None
+
+        A = (float(e1.dxf.start[0]), float(e1.dxf.start[1]))
+        B = (float(e1.dxf.end[0]), float(e1.dxf.end[1]))
+        C = (float(e2.dxf.start[0]), float(e2.dxf.start[1]))
+        D = (float(e2.dxf.end[0]), float(e2.dxf.end[1]))
+
+        dx1, dy1 = B[0] - A[0], B[1] - A[1]
+        dx2, dy2 = D[0] - C[0], D[1] - C[1]
+        denom = dx1 * dy2 - dy1 * dx2
+        if abs(denom) < 1e-6:
+            return None  # Parallel lines
+
+        t = ((C[0] - A[0]) * dy2 - (C[1] - A[1]) * dx2) / denom
+        Px = A[0] + t * dx1
+        Py = A[1] + t * dy1
+        P = (Px, Py)
+
+        dA, dB = math.hypot(A[0] - P[0], A[1] - P[1]), math.hypot(B[0] - P[0], B[1] - P[1])
+        dC, dD = math.hypot(C[0] - P[0], C[1] - P[1]), math.hypot(D[0] - P[0], D[1] - P[1])
+
+        if radius <= 0.0:
+            # Sharp corner join
+            if dA < dB:
+                e1.dxf.start = (P[0], P[1], e1.dxf.start[2] if len(e1.dxf.start) > 2 else 0.0)
+            else:
+                e1.dxf.end = (P[0], P[1], e1.dxf.end[2] if len(e1.dxf.end) > 2 else 0.0)
+
+            if dC < dD:
+                e2.dxf.start = (P[0], P[1], e2.dxf.start[2] if len(e2.dxf.start) > 2 else 0.0)
+            else:
+                e2.dxf.end = (P[0], P[1], e2.dxf.end[2] if len(e2.dxf.end) > 2 else 0.0)
+            return handle1
+        else:
+            # Trim lines back by radius and connect with bevel/arc
+            v1 = (A[0] - P[0], A[1] - P[1]) if dA > dB else (B[0] - P[0], B[1] - P[1])
+            L1 = math.hypot(v1[0], v1[1])
+            if L1 > 0:
+                pt1 = (P[0] + (v1[0] / L1) * radius, P[1] + (v1[1] / L1) * radius)
+                if dA < dB:
+                    e1.dxf.start = (pt1[0], pt1[1], e1.dxf.start[2] if len(e1.dxf.start) > 2 else 0.0)
+                else:
+                    e1.dxf.end = (pt1[0], pt1[1], e1.dxf.end[2] if len(e1.dxf.end) > 2 else 0.0)
+
+            v2 = (C[0] - P[0], C[1] - P[1]) if dC > dD else (D[0] - P[0], D[1] - P[1])
+            L2 = math.hypot(v2[0], v2[1])
+            if L2 > 0:
+                pt2 = (P[0] + (v2[0] / L2) * radius, P[1] + (v2[1] / L2) * radius)
+                if dC < dD:
+                    e2.dxf.start = (pt2[0], pt2[1], e2.dxf.start[2] if len(e2.dxf.start) > 2 else 0.0)
+                else:
+                    e2.dxf.end = (pt2[0], pt2[1], e2.dxf.end[2] if len(e2.dxf.end) > 2 else 0.0)
+
+            connector_h = self.draw_line(pt1, pt2, layer=str(e1.dxf.layer))
+            return connector_h
+
+    def chamfer_entities(
+        self, handle1: str, handle2: str, dist1: float = 0.0, dist2: float = 0.0
+    ) -> Optional[str]:
+        """Chamfer two intersecting lines with setback distances."""
+        d1 = dist1 if dist1 > 0 else 0.5
+        d2 = dist2 if dist2 > 0 else d1
+        return self.fillet_entities(handle1, handle2, radius=d1)
+
+    def explode_entity(self, handle: str) -> List[str]:
+        """Explode a polyline or block into primitive lines."""
+        e = None
+        for entity in self.msp:
+            if str(entity.dxf.handle) == str(handle):
+                e = entity
+                break
+        if not e:
+            return []
+
+        dxftype = e.dxftype()
+        layer = str(e.dxf.layer)
+        color = getattr(e.dxf, "color", 7)
+        new_handles = []
+
+        if dxftype in ("LWPOLYLINE", "POLYLINE"):
+            if dxftype == "LWPOLYLINE":
+                pts = [(float(p[0]), float(p[1])) for p in e.get_points()]
+            else:
+                pts = [(float(v.dxf.location[0]), float(v.dxf.location[1])) for v in e.vertices]
+            n = len(pts)
+            is_closed = getattr(e, "is_closed", False)
+            m = n if is_closed else n - 1
+            for i in range(m):
+                p1 = pts[i]
+                p2 = pts[(i + 1) % n]
+                lh = self.draw_line(p1, p2, layer=layer, color=color)
+                new_handles.append(lh)
+            # Remove original polyline
+            try:
+                self.msp.delete_entity(e)
+            except Exception:
+                pass
+            return new_handles
+
+        elif dxftype == "INSERT":
+            # Explode block reference
+            try:
+                exploded = e.explode()
+                for exp_e in exploded:
+                    new_handles.append(str(exp_e.dxf.handle))
+                return new_handles
+            except Exception:
+                return []
+
+        return []
+
+    def match_properties(self, source_handle: str, target_handles: List[str]) -> bool:
+        """Copy layer, color, linetype and lineweight from source entity to targets."""
+        source = None
+        for entity in self.msp:
+            if str(entity.dxf.handle) == str(source_handle):
+                source = entity
+                break
+        if not source:
+            return False
+
+        src_layer = str(source.dxf.layer)
+        src_color = getattr(source.dxf, "color", 7)
+        src_linetype = getattr(source.dxf, "linetype", "BYLAYER")
+        src_weight = getattr(source.dxf, "lineweight", 0)
+
+        targets_set = set(str(h).strip() for h in target_handles)
+        for entity in self.msp:
+            if str(entity.dxf.handle) in targets_set:
+                entity.dxf.layer = src_layer
+                entity.dxf.color = src_color
+                entity.dxf.linetype = src_linetype
+                entity.dxf.lineweight = src_weight
+
+        return True
+

@@ -591,6 +591,133 @@ def _get_metadata(spec: Dict[str, Any]) -> Dict[str, Any]:
     return {"success": False, "error": "Adapter does not support metadata retrieval"}
 
 
+def _offset(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Offset an entity parallel to itself by distance."""
+    adapter = get_current_adapter()
+    handle = str(spec.get("handle") or spec.get("handles", "")).strip()
+    distance = float(spec.get("distance", 1.0))
+    side_point = spec.get("side_point")
+
+    if not hasattr(adapter, "offset_entity"):
+        return {"success": False, "error": "Adapter does not support offset operation"}
+
+    new_handles = adapter.offset_entity(handle, distance, side_point=side_point)
+    return {
+        "success": bool(new_handles),
+        "source_handle": handle,
+        "distance": distance,
+        "new_handles": new_handles,
+        "count": len(new_handles),
+    }
+
+
+def _fillet(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Fillet two entities with radius (0.0 for sharp corner join)."""
+    adapter = get_current_adapter()
+    handles_raw = spec.get("handles") or spec.get("handle", "")
+    if isinstance(handles_raw, list):
+        handle_list = [str(h).strip() for h in handles_raw]
+    else:
+        handle_list = [h.strip() for h in str(handles_raw).split(",") if h.strip()]
+
+    if len(handle_list) < 2:
+        return {"success": False, "error": "'fillet' requires two entity handles (e.g. 'A1,B2')"}
+
+    radius = float(spec.get("radius", 0.0))
+    if not hasattr(adapter, "fillet_entities"):
+        return {"success": False, "error": "Adapter does not support fillet operation"}
+
+    res = adapter.fillet_entities(handle_list[0], handle_list[1], radius=radius)
+    return {
+        "success": bool(res),
+        "handle1": handle_list[0],
+        "handle2": handle_list[1],
+        "radius": radius,
+        "result": res,
+    }
+
+
+def _chamfer(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Chamfer two intersecting entities with setback distances."""
+    adapter = get_current_adapter()
+    handles_raw = spec.get("handles") or spec.get("handle", "")
+    if isinstance(handles_raw, list):
+        handle_list = [str(h).strip() for h in handles_raw]
+    else:
+        handle_list = [h.strip() for h in str(handles_raw).split(",") if h.strip()]
+
+    if len(handle_list) < 2:
+        return {"success": False, "error": "'chamfer' requires two entity handles (e.g. 'A1,B2')"}
+
+    dist1 = float(spec.get("dist1") or spec.get("distance1", 0.5))
+    dist2 = float(spec.get("dist2") or spec.get("distance2", dist1))
+
+    if not hasattr(adapter, "chamfer_entities"):
+        return {"success": False, "error": "Adapter does not support chamfer operation"}
+
+    res = adapter.chamfer_entities(handle_list[0], handle_list[1], dist1=dist1, dist2=dist2)
+    return {
+        "success": bool(res),
+        "handle1": handle_list[0],
+        "handle2": handle_list[1],
+        "dist1": dist1,
+        "dist2": dist2,
+        "result": res,
+    }
+
+
+def _explode(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Explode polyline or block reference into component primitives."""
+    adapter = get_current_adapter()
+    handles_raw = spec.get("handles") or spec.get("handle", "")
+    if isinstance(handles_raw, list):
+        handle_list = [str(h).strip() for h in handles_raw]
+    else:
+        handle_list = [h.strip() for h in str(handles_raw).split(",") if h.strip()]
+
+    if not handle_list:
+        return {"success": False, "error": "Missing entity handles to explode"}
+
+    if not hasattr(adapter, "explode_entity"):
+        return {"success": False, "error": "Adapter does not support explode operation"}
+
+    all_new = []
+    for h in handle_list:
+        res = adapter.explode_entity(h)
+        all_new.extend(res)
+
+    return {
+        "success": bool(all_new),
+        "exploded_handles": handle_list,
+        "new_handles": all_new,
+        "count": len(all_new),
+    }
+
+
+def _matchprop(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Match properties from source entity to target entities."""
+    adapter = get_current_adapter()
+    src = str(spec.get("source_handle") or spec.get("source", "")).strip()
+    targets_raw = spec.get("target_handles") or spec.get("targets") or spec.get("handles", "")
+    if isinstance(targets_raw, list):
+        target_list = [str(h).strip() for h in targets_raw]
+    else:
+        target_list = [h.strip() for h in str(targets_raw).split(",") if h.strip()]
+
+    if not src or not target_list:
+        return {"success": False, "error": "'matchprop' requires 'source_handle' and 'target_handles'"}
+
+    if not hasattr(adapter, "match_properties"):
+        return {"success": False, "error": "Adapter does not support match_properties operation"}
+
+    success = adapter.match_properties(src, target_list)
+    return {
+        "success": success,
+        "source_handle": src,
+        "target_count": len(target_list),
+    }
+
+
 # Dispatch table: action -> (handler, required_fields)
 ENTITY_DISPATCH: Dict[str, Tuple[Callable, List[str]]] = {
     "select": (_select, ["by", "value"]),
@@ -608,7 +735,13 @@ ENTITY_DISPATCH: Dict[str, Tuple[Callable, List[str]]] = {
     "audit": (_audit, []),
     "set_metadata": (_set_metadata, []),
     "get_metadata": (_get_metadata, []),
+    "offset": (_offset, []),
+    "fillet": (_fillet, []),
+    "chamfer": (_chamfer, []),
+    "explode": (_explode, []),
+    "matchprop": (_matchprop, []),
 }
+
 
 
 def _validate_required_fields(

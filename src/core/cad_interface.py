@@ -1228,7 +1228,82 @@ class CADInterface(ABC):
         """
         pass
 
+    def offset_entity(
+        self, handle: str, distance: float, side_point: Optional[Coordinate] = None
+    ) -> List[str]:
+        """
+        Create a parallel offset of an entity.
+
+        Args:
+            handle: Entity handle
+            distance: Offset distance (positive or negative)
+            side_point: Optional side probe point
+
+        Returns:
+            List[str]: Handles of newly created offset entities
+        """
+        return []
+
+    def fillet_entities(
+        self, handle1: str, handle2: str, radius: float = 0.0
+    ) -> Optional[str]:
+        """
+        Fillet/join two entities with a given radius (0 for sharp join).
+
+        Args:
+            handle1: First entity handle
+            handle2: Second entity handle
+            radius: Corner fillet radius (default: 0.0)
+
+        Returns:
+            Optional[str]: Handle of filleted/connected entity
+        """
+        return None
+
+    def chamfer_entities(
+        self, handle1: str, handle2: str, dist1: float = 0.0, dist2: float = 0.0
+    ) -> Optional[str]:
+        """
+        Chamfer/bevel two intersecting lines.
+
+        Args:
+            handle1: First entity handle
+            handle2: Second entity handle
+            dist1: First setback distance
+            dist2: Second setback distance
+
+        Returns:
+            Optional[str]: Handle of created chamfer line
+        """
+        return None
+
+    def explode_entity(self, handle: str) -> List[str]:
+        """
+        Explode a block reference or polyline into component primitives.
+
+        Args:
+            handle: Entity handle to explode
+
+        Returns:
+            List[str]: Handles of resulting primitive entities
+        """
+        return []
+
+    def match_properties(self, source_handle: str, target_handles: List[str]) -> bool:
+        """
+        Copy layer, color, linetype, and lineweight from source entity to targets.
+
+        Args:
+            source_handle: Template entity handle
+            target_handles: List of target entity handles
+
+        Returns:
+            bool: True if successful
+        """
+        return True
+
     # ========== Utility Methods ==========
+
 
     @staticmethod
     def normalize_coordinate(coord: Coordinate) -> Point:
