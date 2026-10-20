@@ -2,7 +2,7 @@
 
 | 🏗️ Perfil & ConTech | 📈 Repositorio & Enlaces |
 | :--- | :--- |
-| ![Profesión](https://img.shields.io/badge/Profesi%C3%B3n-Arquitectos%20T%C3%A9cnicos-2e7d32?logo=micro%3Abit&logoColor=white&style=plastic) <br> ![Role](https://img.shields.io/badge/Role-BIM%20%26%20ConTech-007ACC?logo=bim360&style=plastic) <br> ![Location](https://img.shields.io/badge/Location-A%20Coru%C3%B1a%20%F0%9F%8C%8A-005B94?logo=lighthouse&logoColor=white&style=plastic) <br> ![Sector](https://img.shields.io/badge/Sector-ConTech%20%7C%20AECO-E65100?logo=construct3&style=plastic) <br> ![Maker](https://img.shields.io/badge/Maker-Software-red?logo=makerbot&style=plastic) <br> ![Hardware](https://img.shields.io/badge/Hardware---grey?style=plastic) <br> ![Windows](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&style=plastic) <br> ![Language](https://img.shields.io/badge/Language-Python%203.11-3776AB?logo=python&logoColor=white&style=plastic) | [![Versión](https://img.shields.io/badge/Versi%C3%B3n-0.2.1--AECO-3b82f6?logo=github&style=plastic)](https://github.com/jmcaamanog/multiCAD-mcp/releases) <br> [![Tests](https://img.shields.io/badge/Tests-265%20Passed%20(100%25)-10b981?logo=pytest&logoColor=white&style=plastic)](https://github.com/jmcaamanog/multiCAD-mcp) <br> [![Licencia](https://img.shields.io/badge/Licencia-Apache%202.0-8b5cf6?style=plastic)](./LICENSE) <br> [![FastMCP](https://img.shields.io/badge/FastMCP-2.x%20%26%203.x-06b6d4?style=plastic)](https://github.com/jlowin/fastmcp) <br> [![ezdxf](https://img.shields.io/badge/Engine-Headless%20ezdxf-f59e0b?style=plastic)](https://ezdxf.mozman.at/) <br> [![Glama](https://img.shields.io/badge/Glama-MCP%20Server-7c3aed?style=plastic)](https://glama.ai/mcp/servers) <br> [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=plastic&logo=linkedin)](https://www.linkedin.com/in/jmcaamanog/) |
+| ![Profesión](https://img.shields.io/badge/Profesi%C3%B3n-Arquitectos%20T%C3%A9cnicos-2e7d32?logo=micro%3Abit&logoColor=white&style=plastic) <br> ![Role](https://img.shields.io/badge/Role-BIM%20%26%20ConTech-007ACC?logo=bim360&style=plastic) <br> ![Location](https://img.shields.io/badge/Location-A%20Coru%C3%B1a%20%F0%9F%8C%8A-005B94?logo=lighthouse&logoColor=white&style=plastic) <br> ![Sector](https://img.shields.io/badge/Sector-ConTech%20%7C%20AECO-E65100?logo=construct3&style=plastic) <br> ![Maker](https://img.shields.io/badge/Maker-Software-red?logo=makerbot&style=plastic) <br> ![Hardware](https://img.shields.io/badge/Hardware---grey?style=plastic) <br> ![Windows](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&style=plastic) <br> ![Language](https://img.shields.io/badge/Language-Python%203.11-3776AB?logo=python&logoColor=white&style=plastic) | [![Versión](https://img.shields.io/badge/Versi%C3%B3n-0.2.1--AECO-3b82f6?logo=github&style=plastic)](https://github.com/jmcaamanog/multiCAD-mcp/releases) <br> [![Tests](https://img.shields.io/badge/Tests-316%20Passed%20(100%25)-10b981?logo=pytest&logoColor=white&style=plastic)](https://github.com/jmcaamanog/multiCAD-mcp) <br> [![Licencia](https://img.shields.io/badge/Licencia-Apache%202.0-8b5cf6?style=plastic)](./LICENSE) <br> [![FastMCP](https://img.shields.io/badge/FastMCP-2.x%20%26%203.x-06b6d4?style=plastic)](https://github.com/jlowin/fastmcp) <br> [![ezdxf](https://img.shields.io/badge/Engine-Headless%20ezdxf-f59e0b?style=plastic)](https://ezdxf.mozman.at/) <br> [![Glama](https://img.shields.io/badge/Glama-MCP%20Server-7c3aed?style=plastic)](https://glama.ai/mcp/servers) <br> [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=plastic&logo=linkedin)](https://www.linkedin.com/in/jmcaamanog/) |
 
 ### Servidor MCP Universal de Grado Industrial para Control de CAD mediante IA, Motor Headless DXF, Estándares AECO, Trazado PDF Vectorial, Visor Gráfico Interactivo y Puente ConTech CE3X.
 *Control interactivo por lenguaje natural de AutoCAD, ZWCAD, GstarCAD y BricsCAD vía Windows COM, con motor offline autónomo DXF para arquitectura, construcción, mediciones y certificación energética.*
@@ -35,6 +35,12 @@
 | Módulo | Icono | Funcionalidades Destacadas |
 | :--- | :---: | :--- |
 | **Motor Headless DXF** | ⚡ | **Adaptador universal `ezdxf` autónomo**. Permite crear, modificar, cubicar y exportar planos CAD `.dxf` en segundo plano sin necesitar licencias ni tener AutoCAD/ZWCAD abierto en Windows. |
+| **Espacio Papel & Maquetación** | 📐 | Herramienta `manage_layouts`: creación automática de presentaciones ISO (`A4`, `A3`, `A2`, `A1`, `A0`), ventanas gráficas `MVIEW` a escalas normalizadas (`1:50`, `1:100`, etc.) y cajetines AECO con rotulación. |
+| **Edición Paramétrica & Geometría** | ✂️ | Comandos nativos de modelado: `OFFSET` (equidistancia), `FILLET` (empalme con radio), `CHAMFER` (chaflán), `EXPLODE` (descomposición) e igualación de propiedades `MATCHPROP`. |
+| **Topología, Contornos, Trim & Extend** | 🔗 | Detección automática de polilíneas de contorno desde punto interior (`BOUNDARY`), unión de segmentos contiguos con tolerancia de holgura (`JOIN`), y recorte / alargamiento contra aristas de corte (`TRIM` & `EXTEND`). |
+| **Asistente OSNAP & Intersecciones** | 🧲 | Localización exacta de cruces geométricos entre curvas/líneas (`intersections`) y sonda inteligente de puntos de enganche (`snap`) para anclaje a extremos, puntos medios y centros. |
+| **Tramas Técnicas & Sombreados** | 🧱 | Rayados normalizados (`ANSI31`, `AR-CONC`, `GRAVEL`, `EARTH`, `SOLID`) con control de escala, ángulo y sombreado asociativo por entidad de contorno. |
+| **Búsqueda & Reemplazo Semántico** | 🔎 | Herramienta `replace_text` / `find_text` para búsqueda y sustitución por lotes en rótulos `TEXT`, `MTEXT` y atributos de bloques `ATTRIB` con soporte para expresiones regulares. |
 | **Visor CAD Interactivo HTML5** | 👁️ | Generación y apertura en 1 clic de un visor web interactivo en Canvas con zoom suave, paneo, conmutador de capas y selección de recintos con inspección de m² y datos BIM. |
 | **Inteligencia Espacial & Minimapas** | 🧭 | Inferencia espacial directa en el chat: consulta Point-in-Polygon ("¿qué hay en x,y?"), cálculo del bounding box envolvente y generación de minimapas ASCII esquemáticos. |
 | **Rotulación & Acotación Inteligente** | 🏷️ | Acotación automática (`auto_dimension`) de la envolvente o de tramos de muro, y rotulación automática de recintos (`label_spaces`) con texto centrado en sus centroides y m² calculados. |
@@ -56,18 +62,20 @@
 
 1. **`manage_session`**: Ciclo de vida de la conexión, estado de instancias CAD y navegación histórica.
 2. **`manage_view`**: Control de encuadre, cámara, auto-zoom extents/window, vistas 3D axonométricas y estilos visuales.
-3. **`prompt_user`**: Interacción "Human-in-the-Loop" solicitando clics en pantalla (`point`), selección de objetos (`entity`), distancias o texto vía AutoCAD Utility.
-4. **`draw_entities`**: Primitivas vectoriales y macros arquitectónicas (`line`, `rect`, `circle`, `wall`, `door`, `window`, `table`, etc.).
-5. **`manage_entities`**: Modificación (`move`, `rotate`, `scale`, `delete`), medición (`area`, `area_table`), auditoría (`audit`) y metadatos BIM XDATA (`set_metadata`, `get_metadata`).
-6. **`manage_layers`**: Creación, visibilidad, colores y plantillas normalizadas (`template\|aeco`, `template\|aia`, `template\|mep`, `purge`).
-7. **`manage_blocks`**: Creación, inserción y lectura/escritura de atributos de bloques.
-8. **`manage_files`**: Apertura, guardado, alternancia y cierre de archivos DWG/DXF.
-9. **`manage_xrefs`**: Enlace, recarga y desenlace de referencias externas DWG e imágenes ráster/ortofotos.
-10. **`export_data`**: Extracción a JSON, Excel, presupuestos FIEBDC-3 (`.bc3`) y planos en PDF vectorial (`.pdf`).
-11. **`export_ce3x_envelope`**: Extracción paramétrica de la envolvente térmica (fachadas orientadas, huecos, forjados) para certificación energética oficial en `CE3X-MCP-SERVER`.
-12. **`inspect_drawing`**: Inteligencia espacial, consulta Point-in-Polygon ("¿qué hay en x,y?"), esquema de recintos y minimapa ASCII en el chat.
-13. **`manage_annotations`**: Acotación automática de edificios y paredes (`auto_dimension`), rotulación inteligente de recintos con m² en centroides (`label_spaces`) y directrices.
-14. **`show_drawing_viewer`**: Generación y apertura en 1 clic de un visor CAD interactivo en HTML5/Canvas en el navegador con zoom, pan, control de capas e inspección de recintos.
+3. **`manage_layouts`**: Gestión completa de espacio papel, formatos ISO normalizados (`A4` a `A0`), ventanas gráficas `MVIEW` escaladas y cajetines AECO con rotulación.
+4. **`prompt_user`**: Interacción "Human-in-the-Loop" solicitando clics en pantalla (`point`), selección de objetos (`entity`), distancias o texto vía AutoCAD Utility.
+5. **`draw_entities`**: Primitivas vectoriales, tramas técnicas (`ANSI31`, `AR-CONC`, `GRAVEL`, `SOLID`) y macros arquitectónicas (`wall`, `door`, `window`, `table`, etc.).
+6. **`manage_entities`**: Modificación paramétrica (`offset`, `fillet`, `chamfer`, `explode`, `matchprop`, `boundary`, `join`, `trim`, `extend`), búsqueda semántica (`find_text`, `replace_text`), medición (`area`, `area_table`), auditoría (`audit`) y metadatos BIM XDATA (`set_metadata`, `get_metadata`).
+7. **`manage_layers`**: Creación, visibilidad, colores y plantillas normalizadas (`template\|aeco`, `template\|aia`, `template\|mep`, `purge`).
+8. **`manage_blocks`**: Creación, inserción y lectura/escritura de atributos de bloques.
+9. **`manage_files`**: Apertura, guardado, alternancia y cierre de archivos DWG/DXF.
+10. **`manage_xrefs`**: Enlace, recarga y desenlace de referencias externas DWG e imágenes ráster/ortofotos.
+11. **`export_data`**: Extracción a JSON, Excel, presupuestos FIEBDC-3 (`.bc3`) y planos en PDF vectorial (`.pdf`).
+12. **`export_ce3x_envelope`**: Extracción paramétrica de la envolvente térmica (fachadas orientadas, huecos, forjados) para certificación energética oficial en `CE3X-MCP-SERVER`.
+13. **`inspect_drawing`**: Inteligencia espacial, consulta Point-in-Polygon ("¿qué hay en x,y?"), detección de cruces (`intersections`), asistente de enganche `snap` (OSNAP) y minimapa ASCII.
+14. **`manage_annotations`**: Acotación automática de edificios y paredes (`auto_dimension`), rotulación inteligente de recintos con m² en centroides (`label_spaces`) y directrices.
+15. **`show_drawing_viewer`**: Generación y apertura en 1 clic de un visor CAD interactivo en HTML5/Canvas en el navegador con zoom, pan, control de capas e inspección de recintos.
+
 
 
 ---
