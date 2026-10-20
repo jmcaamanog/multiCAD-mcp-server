@@ -2,7 +2,7 @@
 
 | 🏗️ Perfil & ConTech | 📈 Repositorio & Enlaces |
 | :--- | :--- |
-| ![Profesión](https://img.shields.io/badge/Profesi%C3%B3n-Arquitectos%20T%C3%A9cnicos-2e7d32?style=plastic) <br> ![Role](https://img.shields.io/badge/Role-BIM%20%26%20ConTech-007ACC?style=plastic) <br> ![Location](https://img.shields.io/badge/Location-A%20Coru%C3%B1a%20%F0%9F%8C%8A-005B94?style=plastic) <br> ![Sector](https://img.shields.io/badge/Sector-ConTech%20%7C%20AECO-E65100?style=plastic) <br> ![Protocol](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol-800080?style=plastic) <br> ![Engine](https://img.shields.io/badge/Engine-FastMCP%20%26%20ezdxf-008080?style=plastic) <br> ![Normativa](https://img.shields.io/badge/Normativa-CAD%20Est%C3%A1ndar%20%7C%20AECO-CC7722?style=plastic) <br> ![Language](https://img.shields.io/badge/Language-Python%203.11-3776AB?logo=python&logoColor=white&style=plastic) | [![pypi](https://img.shields.io/pypi/v/multicad-mcp-server?style=plastic&logo=pypi&logoColor=white&label=pypi&color=0073B7)](https://pypi.org/project/multicad-mcp-server/) <br> [![Descargas/mes](https://img.shields.io/pypi/dm/multicad-mcp-server?style=plastic&logo=pypi&logoColor=white&label=Descargas%2Fmes&color=28a745)](https://pypi.org/project/multicad-mcp-server/) <br> [![Version](https://img.shields.io/badge/Version-v0.2.1-3b82f6?style=plastic&logo=github)](https://github.com/jmcaamanog/multiCAD-mcp-server/releases) <br> [![Stars](https://img.shields.io/github/stars/jmcaamanog/multiCAD-mcp-server?style=plastic&logo=github&color=eab308)](https://github.com/jmcaamanog/multiCAD-mcp-server/stargazers) <br> [![Glama.ai](https://img.shields.io/badge/Glama.ai-MCP%20Server-7c3aed?style=plastic)](https://glama.ai/mcp/servers) <br> [![Glama](https://img.shields.io/badge/A_A-Glama-111827?style=plastic&logo=glama)](https://glama.ai/mcp/servers) <br> [![Licencia](https://img.shields.io/badge/Licencia-Apache%202.0-8b5cf6?style=plastic)](./LICENSE) <br> [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=plastic&logo=linkedin)](https://www.linkedin.com/in/jmcaamanog/) <br> [![Web](https://img.shields.io/badge/Web-jmcaamanog.pages.dev-0284c7?style=plastic)](https://jmcaamanog.pages.dev) |
+| ![Profesión](https://img.shields.io/badge/Profesi%C3%B3n-Arquitectos%20T%C3%A9cnicos-2e7d32?style=plastic) <br> ![Role](https://img.shields.io/badge/Role-BIM%20%26%20ConTech-007ACC?style=plastic) <br> ![Location](https://img.shields.io/badge/Location-A%20Coru%C3%B1a%20%F0%9F%8C%8A-005B94?style=plastic) <br> ![Sector](https://img.shields.io/badge/Sector-ConTech%20%7C%20AECO-E65100?style=plastic) <br> ![Protocol](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol-800080?style=plastic) <br> ![Engine](https://img.shields.io/badge/Engine-FastMCP%20%26%20ezdxf-008080?style=plastic) <br> ![Normativa](https://img.shields.io/badge/Normativa-CAD%20Est%C3%A1ndar%20%7C%20AECO-CC7722?style=plastic) <br> ![Language](https://img.shields.io/badge/Language-Python%203.11-3776AB?logo=python&logoColor=white&style=plastic) | [![PyPI Version](https://img.shields.io/pypi/v/multicad-mcp-server?color=blue&logo=pypi&logoColor=white&style=plastic)](https://pypi.org/project/multicad-mcp-server/) <br> [![PyPI Descargas](https://img.shields.io/pypi/dm/multicad-mcp-server?color=10b981&label=Descargas%2Fmes&logo=pypi&logoColor=white&style=plastic)](https://pypi.org/project/multicad-mcp-server/) <br> [![Versión](https://img.shields.io/github/v/release/jmcaamanog/multiCAD-mcp-server?label=Version&color=3b82f6&logo=github&style=plastic)](https://github.com/jmcaamanog/multiCAD-mcp-server/releases/latest) <br> [![Stars](https://img.shields.io/github/stars/jmcaamanog/multiCAD-mcp-server?style=plastic&logo=github&color=eab308)](https://github.com/jmcaamanog/multiCAD-mcp-server/stargazers) <br> [![Glama.ai](https://img.shields.io/badge/Glama.ai-MCP%20Server-7c3aed?style=plastic)](https://glama.ai/mcp/servers) <br> [![Glama](https://img.shields.io/badge/A_A-Glama-111827?style=plastic&logo=glama)](https://glama.ai/mcp/servers) <br> [![Licencia](https://img.shields.io/badge/Licencia-Apache%202.0-8b5cf6?style=plastic)](./LICENSE) <br> [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=plastic&logo=linkedin)](https://www.linkedin.com/in/jmcaamanog/) <br> [![Web](https://img.shields.io/badge/Web-jmcaamanog.pages.dev-0284c7?style=plastic)](https://jmcaamanog.pages.dev) |
 
 ### Servidor MCP Universal de Grado Industrial para Control de CAD mediante IA, Motor Headless DXF, Estándares AECO, Trazado PDF Vectorial, Visor Gráfico Interactivo y Puente ConTech CE3X.
 *Control interactivo por lenguaje natural de AutoCAD, ZWCAD, GstarCAD y BricsCAD vía Windows COM, con motor offline autónomo DXF para arquitectura, construcción, mediciones y certificación energética.*
@@ -13,6 +13,7 @@
 
 | 🌟 Recurso | 🚀 Acción / Enlace | 📝 Descripción |
 | :--- | :--- | :--- |
+| **Paquete PyPI Oficial** | 📦 **[Ver en PyPI](https://pypi.org/project/multicad-mcp-server/)** | Distribución oficial (`pip install multicad-mcp-server` / `uvx multicad-mcp-server`). |
 | **Instalador 1-Clic** | 📥 **[Descargar instalador .bat](./instalar_en_claude_desktop.bat)** | Inyección automática y segura en Claude Desktop y Cursor. |
 | **Historial de Cambios** | 📜 **[Ver CHANGELOG.md](./CHANGELOG.md)** | Registro pormenorizado de novedades, mejoras y correcciones. |
 | **Código de Conducta** | 🤝 **[Ver CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)** | Normas de convivencia y participación en la comunidad. |
@@ -24,9 +25,23 @@
 
 ---
 
-> [!IMPORTANT]
-> ### 📥 Instalación Rápida en 1-Clic para Claude Desktop y Cursor
-> Si deseas conectar tu cliente de Inteligencia Artificial con tus herramientas de dibujo en segundos:
+> [!IMPORTANT] 📥
+> ### 🎯 ¿No quieres lidiar con consolas, comandos ni clonar repositorios?
+>
+> 📦 **Opción 1: Uso directo vía PyPI con `uvx` (Recomendado):**  
+> Copia estas líneas en tu archivo de configuración de Claude Desktop o Cursor:
+> ```json
+> "multicad": {
+>   "command": "uvx",
+>   "args": ["multicad-mcp-server"]
+> }
+> ```
+> O instálalo en tu entorno Python con:
+> ```bash
+> pip install multicad-mcp-server
+> ```
+>
+> 🛠️ **Opción 2: Instalador 1-Clic en local:**
 > 1. Clona o descarga el repositorio en local.
 > 2. Haz doble clic sobre **`instalar_en_claude_desktop.bat`**.
 > 3. El instalador detecta automáticamente el binario ejecutable `multicad-mcp.exe`, genera una copia de respaldo de seguridad `.bak` e inyecta la configuración en Claude Desktop y Cursor sin alterar tus otros servidores MCP.

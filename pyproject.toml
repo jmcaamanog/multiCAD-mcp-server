@@ -4,16 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multicad-mcp-server"
-version = "0.2.1"
+version = "0.2.2"
 description = "Universal Industrial-Grade MCP Server for AI CAD Control, Headless DXF Engine, AECO Standards, and CE3X ConTech Bridge"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [
-    {name = "Jose Manuel Caamaño González", email = "5682292+jmcaamanog@users.noreply.github.com"},
-    {name = "AnCode666"},
-    {name = "SVF-GFA"},
-    {name = "JardiMargalefAgusti"}
+    {name = "Jose Manuel Caamaño González", email = "5682292+jmcaamanog@users.noreply.github.com"}
+]
+maintainers = [
+    {name = "Jose Manuel Caamaño González", email = "5682292+jmcaamanog@users.noreply.github.com"}
 ]
 keywords = [
     "cad",

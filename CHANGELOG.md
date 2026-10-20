@@ -46,6 +46,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.2] - 2026-10-20
+
+### Changed
+- **Lead Author & Distribution Attribution**: Set Jose Manuel Caamaño González as primary author and maintainer in `pyproject.toml` and `src/__version__.py` for the official PyPI package (`multicad-mcp-server`).
+- **Community Governance & Parity**: Added `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `glama.json` matching the standards of `CE3X-MCP-Server`.
+- **Packaging Robustness**: Added `MANIFEST.in` and package-data mapping for dashboard static web assets and config files.
+
+---
+
 ## [0.2.1] - 2026-06-27
 
 ### Added
